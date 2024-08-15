@@ -42,7 +42,7 @@ type CQBot struct {
 	events []func(*Event)
 
 	friendReqCache syncx.Map[string, *event2.NewFriendRequest]
-	//tempSessionCache syncx.Map[int64, *event2.]
+	// tempSessionCache syncx.Map[int64, *event2.]
 }
 
 // Event 事件
@@ -83,7 +83,7 @@ func NewQQBot(cli *client.QQClient) *CQBot {
 		bot.Client.SelfPrivateMessageEvent.Subscribe(bot.privateMessageEvent)
 		bot.Client.SelfGroupMessageEvent.Subscribe(bot.groupMessageEvent)
 	}
-	//bot.Client.TempMessageEvent.Subscribe(bot.tempMessageEvent)
+	// bot.Client.TempMessageEvent.Subscribe(bot.tempMessageEvent)
 	bot.Client.GroupMuteEvent.Subscribe(bot.groupMutedEvent)
 	bot.Client.GroupRecallEvent.Subscribe(bot.groupRecallEvent)
 	bot.Client.GroupNotifyEvent.Subscribe(bot.groupNotifyEvent)
@@ -91,7 +91,7 @@ func NewQQBot(cli *client.QQClient) *CQBot {
 	bot.Client.MemberSpecialTitleUpdatedEvent.Subscribe(bot.memberTitleUpdatedEvent)
 	bot.Client.FriendRecallEvent.Subscribe(bot.friendRecallEvent)
 	// TODO 离线文件
-	//bot.Client.OfflineFileEvent.Subscribe(bot.offlineFileEvent)
+	// bot.Client.OfflineFileEvent.Subscribe(bot.offlineFileEvent)
 	// TODO bot加群
 	bot.Client.GroupJoinEvent.Subscribe(bot.joinGroupEvent)
 	// TODO bot退群
@@ -99,16 +99,16 @@ func NewQQBot(cli *client.QQClient) *CQBot {
 	bot.Client.GroupMemberJoinEvent.Subscribe(bot.memberJoinEvent)
 	bot.Client.GroupMemberLeaveEvent.Subscribe(bot.memberLeaveEvent)
 	// TODO 群成员权限变更
-	//bot.Client.GroupMemberPermissionChangedEvent.Subscribe(bot.memberPermissionChangedEvent)
+	// bot.Client.GroupMemberPermissionChangedEvent.Subscribe(bot.memberPermissionChangedEvent)
 	// TODO 群成员名片更新
-	//bot.Client.MemberCardUpdatedEvent.Subscribe(bot.memberCardUpdatedEvent)
-	//bot.Client.FriendRequestEvent.Subscribe(bot.friendRequestEvent)
+	// bot.Client.MemberCardUpdatedEvent.Subscribe(bot.memberCardUpdatedEvent)
+	// bot.Client.FriendRequestEvent.Subscribe(bot.friendRequestEvent)
 	// TODO 成为好友
-	//bot.Client.NewFriendEvent.Subscribe(bot.friendAddedEvent)
-	//bot.Client.GroupInvitedEvent.Subscribe(bot.groupInvitedEvent)
-	//bot.Client.GroupMemberJoinRequestEvent.Subscribe(bot.groupJoinReqEvent)
+	// bot.Client.NewFriendEvent.Subscribe(bot.friendAddedEvent)
+	// bot.Client.GroupInvitedEvent.Subscribe(bot.groupInvitedEvent)
+	// bot.Client.GroupMemberJoinRequestEvent.Subscribe(bot.groupJoinReqEvent)
 	// TODO 客户端变更
-	//bot.Client.OtherClientStatusChangedEvent.Subscribe(bot.otherClientStatusChangedEvent)
+	// bot.Client.OtherClientStatusChangedEvent.Subscribe(bot.otherClientStatusChangedEvent)
 	// TODO 精华消息
 	bot.Client.GroupDigestEvent.Subscribe(bot.groupEssenceMsg)
 	go func() {
@@ -277,7 +277,7 @@ func (bot *CQBot) uploadMedia(target message.Source, elements []message.IMessage
 				}
 			})
 			// TODO 短视频上传
-			//case *msg.LocalVideo:
+			// case *msg.LocalVideo:
 			//	w.do(func() {
 			//		m, err := bot.uploadLocalVideo(target, e)
 			//		if err != nil {
@@ -305,7 +305,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 		case *msg.Poke:
 			return 0, bot.Client.GroupPoke(uint32(groupID), uint32(i.Target))
 		// TODO 发送音乐卡片
-		//case *message.MusicShareElement:
+		// case *message.MusicShareElement:
 		//	ret, err := bot.Client.SendGroupMusicShare(groupID, i)
 		//	if err != nil {
 		//		log.Warnf("警告: 群 %v 富文本消息发送失败: %v", groupID, err)
@@ -349,7 +349,7 @@ func (bot *CQBot) SendPrivateMessage(target int64, groupID int64, m *message.Sen
 			return 0
 
 			// TODO 音乐卡片
-			//case *message.MusicShareElement:
+			// case *message.MusicShareElement:
 			//	bot.Client.SendFriendMusicShare(target, i)
 			//	return 0
 		}
@@ -376,12 +376,19 @@ func (bot *CQBot) SendPrivateMessage(target int64, groupID int64, m *message.Sen
 	//	return false
 	//}
 
-	//session, ok := bot.tempSessionCache.Load(target)
+	// session, ok := bot.tempSessionCache.Load(target)
 	var id int32 = -1
 	ret, err := bot.Client.SendPrivateMessage(uint32(groupID), m.Elements)
-	if err != nil || ret == nil {
+	if ret != nil {
 		id = bot.InsertPrivateMessage(ret, source)
 	}
+	if ret == nil && err == nil {
+		err = fmt.Errorf("未知错误")
+	}
+	if err != nil {
+		log.Warnf("好友消息发送失败: %v.", err)
+	}
+
 	//switch {
 	//case bot.Client.FindFriend(target) != nil: // 双向好友
 	//	msg := bot.Client.SendPrivateMessage(target, m)
