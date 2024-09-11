@@ -426,12 +426,12 @@ func (bot *CQBot) InsertGroupMessage(m *message.GroupMessage, source message.Sou
 		return ok
 	})
 	msg := &db.StoredGroupMessage{
-		ID:       encodeMessageID(int64(m.GroupUin), m.Id),
-		GlobalID: db.ToGlobalID(int64(m.GroupUin), m.Id),
+		ID:       encodeMessageID(int64(m.GroupUin), int32(m.Id)),
+		GlobalID: db.ToGlobalID(int64(m.GroupUin), int32(m.Id)),
 		SubType:  "normal",
 		Attribute: &db.StoredMessageAttribute{
-			MessageSeq: m.Id,
-			InternalID: m.InternalId,
+			MessageSeq: int32(m.Id),
+			InternalID: int32(m.InternalId),
 			SenderUin:  int64(m.Sender.Uin),
 			SenderName: m.Sender.CardName,
 			Timestamp:  int64(m.Time),
@@ -469,23 +469,23 @@ func (bot *CQBot) InsertPrivateMessage(m *message.PrivateMessage, source message
 		return ok
 	})
 	msg := &db.StoredPrivateMessage{
-		ID:       encodeMessageID(int64(m.Sender.Uin), m.Id),
-		GlobalID: db.ToGlobalID(int64(m.Sender.Uin), m.Id),
+		ID:       encodeMessageID(int64(m.Sender.Uin), int32(m.Id)),
+		GlobalID: db.ToGlobalID(int64(m.Sender.Uin), int32(m.Id)),
 		SubType:  "normal",
 		Attribute: &db.StoredMessageAttribute{
-			MessageSeq: m.Id,
-			InternalID: m.InternalId,
+			MessageSeq: int32(m.Id),
+			InternalID: int32(m.InternalId),
 			SenderUin:  int64(m.Sender.Uin),
 			SenderName: m.Sender.Nickname,
 			Timestamp:  int64(m.Time),
 		},
 		SessionUin: func() int64 {
-			if int64(m.Sender.Uin) == m.Self {
-				return m.Target
+			if (m.Sender.Uin) == m.Self {
+				return int64(m.Target)
 			}
 			return int64(m.Sender.Uin)
 		}(),
-		TargetUin: m.Target,
+		TargetUin: int64(m.Target),
 		Content:   ToMessageContent(m.Elements, source),
 	}
 	if replyElem != nil {
