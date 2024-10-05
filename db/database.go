@@ -61,6 +61,7 @@ type (
 	// StoredMessageAttribute 持久化消息属性
 	StoredMessageAttribute struct {
 		MessageSeq int32  `bson:"messageSeq" yaml:"-"`
+		ClientSeq  int32  `bson:"clientSeq" yaml:"-"`
 		InternalID int32  `bson:"internalId" yaml:"-"`
 		SenderUin  int64  `bson:"senderUin" yaml:"-"`
 		SenderName string `bson:"senderName" yaml:"-"`

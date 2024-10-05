@@ -26,22 +26,20 @@ func convertGroupMemberInfo(groupID int64, m *entity.GroupMember) global.MSG {
 		role = "member"
 	}
 	return global.MSG{
-		"group_id":       groupID,
-		"user_id":        m.Uin,
-		"nickname":       m.MemberName,
-		"card":           m.MemberCard,
-		"sex":            sex,
-		"age":            0,
-		"area":           "",
-		"join_time":      m.JoinTime,
-		"last_sent_time": m.LastMsgTime,
-		// TODO 这个也获取不到
-		"shut_up_timestamp": 0,
+		"group_id":          groupID,
+		"user_id":           m.Uin,
+		"nickname":          m.MemberName,
+		"card":              m.MemberCard,
+		"sex":               sex,
+		"age":               0,
+		"area":              "",
+		"join_time":         m.JoinTime,
+		"last_sent_time":    m.LastMsgTime,
+		"shut_up_timestamp": m.ShutUpTime,
 		"level":             strconv.Itoa(int(m.GroupLevel)),
 		"role":              role,
 		"unfriendly":        false,
-		// TODO 等lagrengego
-		"title":             "",
+		"title":             m.SpecialTitle,
 		"title_expire_time": 0,
 		"card_changeable":   false,
 	}
