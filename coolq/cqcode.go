@@ -345,7 +345,7 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 				"data": global.MSG{"file": o.Name, "url": o.Url},
 			}
 		case *message.ImageElement:
-			data := global.MSG{"file": hex.EncodeToString(o.Md5) + ".image", "url": o.Url, "subType": uint32(o.SubType)}
+			data := global.MSG{"url": o.Url, "subType": uint32(o.SubType)}
 			switch {
 			case o.Flash:
 				data["type"] = "flash"
