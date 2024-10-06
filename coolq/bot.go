@@ -283,9 +283,23 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 		//	}
 		//	return bot.InsertGroupMessage(ret, source), nil
 		case *message.AtElement:
-			self := bot.Client.GetCachedMemberInfo(bot.Client.Uin, uint32(groupID))
-			if i.TargetUin == 0 && self.Permission == entity.Member {
-				e = message.NewText("@全体成员")
+			if i.TargetUin == 0 {
+				self := bot.Client.GetCachedMemberInfo(bot.Client.Uin, uint32(groupID))
+				if self.Permission != entity.Member {
+					e = message.NewText("@全体成员")
+				} else {
+					continue
+				}
+			} else {
+				member := bot.Client.GetCachedMemberInfo(i.TargetUin, uint32(groupID))
+				if member != nil {
+					i.TargetUid = member.Uid
+					if member.MemberCard != "" {
+						i.Display = "@" + member.MemberCard
+					} else {
+						i.Display = "@" + member.MemberName
+					}
+				}
 			}
 		}
 		newElem = append(newElem, e)
