@@ -138,7 +138,7 @@ func LoginInteract() {
 	} else {
 		log.Info("将使用 device.json 内的设备信息运行Bot.")
 		var err error
-		if device, err = auth.LoadOrSaveDevice("device"); err != nil {
+		if device, err = auth.LoadOrSaveDevice("device.json"); err != nil {
 			log.Fatalf("加载设备信息失败: %v", err)
 		}
 	}
