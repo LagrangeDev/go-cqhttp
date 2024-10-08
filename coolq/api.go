@@ -909,15 +909,15 @@ func (bot *CQBot) CQDeleteMessage(messageID int32) global.MSG {
 // @route(set_group_admin)
 // @default(enable=true)
 func (bot *CQBot) CQSetGroupAdmin(groupID, userID int64, enable bool) global.MSG {
-	if g := bot.Client.GetCachedGroupInfo(uint32(groupID)); g != nil {
+	if g := bot.Client.GetCachedGroupInfo(uint32(groupID)); g == nil {
 		return Failed(100, "GROUP_NOT_FOUND", "群不存在")
 	}
-	if m := bot.Client.GetCachedMemberInfo(uint32(userID), uint32(groupID)); m.Permission != entity.Owner {
-		return Failed(100, "PERMISSION_DENIED", "或权限不足")
-	}
-	mem := bot.Client.GetCachedMemberInfo(uint32(userID), uint32(groupID))
-	if mem == nil {
+	m := bot.Client.GetCachedMemberInfo(uint32(userID), uint32(groupID))
+	if m == nil {
 		return Failed(100, "GROUP_MEMBER_NOT_FOUND", "群成员不存在")
+	}
+	if m.Permission != entity.Owner {
+		return Failed(100, "PERMISSION_DENIED", "或权限不足")
 	}
 	if err := bot.Client.GroupSetAdmin(uint32(groupID), uint32(userID), enable); err != nil {
 		return Failed(100, "反正是失败了.png", err.Error())
