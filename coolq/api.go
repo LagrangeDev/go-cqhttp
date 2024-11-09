@@ -260,7 +260,7 @@ func (bot *CQBot) CQGetGroupFilesByFolderID(groupID int64, folderID string) glob
 // @route(get_group_file_url)
 // @rename(bus_id->"[busid\x2Cbus_id].0")
 func (bot *CQBot) CQGetGroupFileURL(groupID int64, fileID string, busID int32) global.MSG {
-	url, err := bot.Client.GetGroupFileUrl(uint32(groupID), fileID)
+	url, err := bot.Client.GetGroupFileURL(uint32(groupID), fileID)
 	if err != nil {
 		return Failed(100, "FILE_SYSTEM_API_ERROR")
 	}
@@ -455,7 +455,7 @@ func (bot *CQBot) uploadForwardElement(m gjson.Result, target int64, sourceType 
 						msgTime = ts.Unix()
 					}
 					return &message.ForwardNode{
-						SenderId:   uint32(m.GetAttribute().SenderUin),
+						SenderID:   uint32(m.GetAttribute().SenderUin),
 						SenderName: m.GetAttribute().SenderName,
 						Time:       uint32(msgTime),
 						Message:    resolveElement(bot.ConvertContentMessage(m.GetContent(), mSource, false)),
@@ -482,7 +482,7 @@ func (bot *CQBot) uploadForwardElement(m gjson.Result, target int64, sourceType 
 				})
 				if nested { // 处理嵌套
 					return &message.ForwardNode{
-						SenderId:   uint32(uin),
+						SenderID:   uint32(uin),
 						SenderName: name,
 						Time:       uint32(msgTime),
 						Message:    []message.IMessageElement{convertMessage(c)},
@@ -492,7 +492,7 @@ func (bot *CQBot) uploadForwardElement(m gjson.Result, target int64, sourceType 
 			content := bot.ConvertObjectMessage(onebot.V11, c, sourceType)
 			if uin != 0 && name != "" && len(content) > 0 {
 				return &message.ForwardNode{
-					SenderId:   uint32(uin),
+					SenderID:   uint32(uin),
 					SenderName: name,
 					Time:       uint32(msgTime),
 					Message:    resolveElement(content),
@@ -544,7 +544,7 @@ func (bot *CQBot) CQSendGroupForwardMessage(groupID int64, m gjson.Result) globa
 	}
 	ret, err := bot.Client.SendGroupMessage(uint32(groupID), []message.IMessageElement{fe})
 	if err != nil || ret == nil {
-		if errors.Is(err, sign.VersionMismatchError) {
+		if errors.Is(err, sign.ErrVersionMismatch) {
 			log.Warnf("群 %v 发送消息失败: 签名与当前协议版本不对应.", groupID)
 			return Failed(100, "SIGN_ERRPR", "签名与当前协议版本不对应")
 		}
@@ -813,9 +813,9 @@ func (bot *CQBot) CQProcessFriendRequest(flag string, approve bool) global.MSG {
 		return Failed(100, "FLAG_NOT_FOUND", "FLAG不存在")
 	}
 	if approve {
-		_ = bot.Client.SetFriendRequest(true, req.SourceUid)
+		_ = bot.Client.SetFriendRequest(true, req.SourceUID)
 	} else {
-		_ = bot.Client.SetFriendRequest(false, req.SourceUid)
+		_ = bot.Client.SetFriendRequest(false, req.SourceUID)
 	}
 	return OK(nil)
 }
@@ -1237,12 +1237,12 @@ func (bot *CQBot) CQGetForwardMessage(resID string) global.MSG {
 			}
 			r[i] = global.MSG{
 				"sender": global.MSG{
-					"user_id":  n.SenderId,
+					"user_id":  n.SenderID,
 					"nickname": n.SenderName,
 				},
 				"time":     n.Time,
 				"content":  content,
-				"group_id": n.GroupId,
+				"group_id": n.GroupID,
 			}
 		}
 		return r
@@ -1521,7 +1521,7 @@ func (bot *CQBot) CQGetEssenceMessageList(groupID int64) global.MSG {
 		if operator := bot.Client.GetCachedMemberInfo(m.OperatorUin, uint32(groupID)); operator != nil {
 			msg["operator_nick"] = operator.MemberName
 		}
-		msg["message_id"] = db.ToGlobalID(groupID, int32(m.Message.Id))
+		msg["message_id"] = db.ToGlobalID(groupID, int32(m.Message.ID))
 		list = append(list, msg)
 	}
 	return OK(list)

@@ -293,7 +293,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 			} else {
 				member := bot.Client.GetCachedMemberInfo(i.TargetUin, uint32(groupID))
 				if member != nil {
-					i.TargetUid = member.Uid
+					i.TargetUID = member.UID
 					if member.MemberCard != "" {
 						i.Display = "@" + member.MemberCard
 					} else {
@@ -312,7 +312,7 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 	bot.checkMedia(newElem, source)
 	ret, err := bot.Client.SendGroupMessage(uint32(groupID), m.Elements, false)
 	if err != nil || ret == nil {
-		if errors.Is(err, sign.VersionMismatchError) {
+		if errors.Is(err, sign.ErrVersionMismatch) {
 			log.Warnf("群 %v 发送消息失败: 签名与当前协议版本不对应.", groupID)
 			return -1, err
 		}
@@ -434,12 +434,12 @@ func (bot *CQBot) InsertGroupMessage(m *message.GroupMessage, source message.Sou
 		return ok
 	})
 	msg := &db.StoredGroupMessage{
-		ID:       encodeMessageID(int64(m.GroupUin), int32(m.Id)),
-		GlobalID: db.ToGlobalID(int64(m.GroupUin), int32(m.Id)),
+		ID:       encodeMessageID(int64(m.GroupUin), int32(m.ID)),
+		GlobalID: db.ToGlobalID(int64(m.GroupUin), int32(m.ID)),
 		SubType:  "normal",
 		Attribute: &db.StoredMessageAttribute{
-			MessageSeq: int32(m.Id),
-			InternalID: int32(m.InternalId),
+			MessageSeq: int32(m.ID),
+			InternalID: int32(m.InternalID),
 			SenderUin:  int64(m.Sender.Uin),
 			SenderName: m.Sender.CardName,
 			Timestamp:  int64(m.Time),
@@ -447,7 +447,7 @@ func (bot *CQBot) InsertGroupMessage(m *message.GroupMessage, source message.Sou
 		GroupCode: int64(m.GroupUin),
 		AnonymousID: func() string {
 			if m.Sender.IsAnonymous() {
-				return m.Sender.AnonymousInfo.AnonymousId
+				return m.Sender.AnonymousInfo.AnonymousID
 			}
 			return ""
 		}(),
@@ -477,13 +477,13 @@ func (bot *CQBot) InsertPrivateMessage(m *message.PrivateMessage, source message
 		return ok
 	})
 	msg := &db.StoredPrivateMessage{
-		ID:       encodeMessageID(int64(m.Sender.Uin), int32(m.Id)),
-		GlobalID: db.ToGlobalID(int64(m.Sender.Uin), int32(m.Id)),
+		ID:       encodeMessageID(int64(m.Sender.Uin), int32(m.ID)),
+		GlobalID: db.ToGlobalID(int64(m.Sender.Uin), int32(m.ID)),
 		SubType:  "normal",
 		Attribute: &db.StoredMessageAttribute{
-			MessageSeq: int32(m.Id),
+			MessageSeq: int32(m.ID),
 			ClientSeq:  int32(m.ClientSeq),
-			InternalID: int32(m.InternalId),
+			InternalID: int32(m.InternalID),
 			SenderUin:  int64(m.Sender.Uin),
 			SenderName: m.Sender.Nickname,
 			Timestamp:  int64(m.Time),

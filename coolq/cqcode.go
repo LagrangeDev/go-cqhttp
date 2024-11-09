@@ -159,7 +159,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 				Type: "record",
 				Data: pairs{
 					{K: "file", V: o.Name},
-					{K: "url", V: o.Url},
+					{K: "url", V: o.URL},
 				},
 			}
 		case *message.ShortVideoElement:
@@ -167,14 +167,14 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 				Type: "video",
 				Data: pairs{
 					{K: "file", V: o.Name},
-					{K: "url", V: o.Url},
+					{K: "url", V: o.URL},
 				},
 			}
 		case *message.ImageElement:
 			data := pairs{
 				{K: "file", V: hex.EncodeToString(o.Md5) + ".image"},
 				{K: "subType", V: strconv.FormatInt(int64(o.SubType), 10)},
-				{K: "url", V: o.Url},
+				{K: "url", V: o.URL},
 			}
 			//switch {
 			//case o.Flash:
@@ -337,15 +337,15 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 		case *message.VoiceElement:
 			m = global.MSG{
 				"type": "record",
-				"data": global.MSG{"file": o.Name, "url": o.Url},
+				"data": global.MSG{"file": o.Name, "url": o.URL},
 			}
 		case *message.ShortVideoElement:
 			m = global.MSG{
 				"type": "video",
-				"data": global.MSG{"file": o.Name, "url": o.Url},
+				"data": global.MSG{"file": o.Name, "url": o.URL},
 			}
 		case *message.ImageElement:
-			data := global.MSG{"file": hex.EncodeToString(o.Md5) + ".image", "url": o.Url, "subType": uint32(o.SubType)}
+			data := global.MSG{"file": hex.EncodeToString(o.Md5) + ".image", "url": o.URL, "subType": uint32(o.SubType)}
 			switch {
 			case o.Flash:
 				data["type"] = "flash"
@@ -1013,12 +1013,12 @@ func (bot *CQBot) readImageCache(b []byte, sourceType message.SourceType) (messa
 	default:
 		rsp, err = bot.Client.QueryFriendImage(hash, fileUuid)
 	}
-	if err != nil || rsp.Url == "" {
+	if err != nil || rsp.URL == "" {
 		return nil, errors.New("unsuport error")
 	}
 	return bot.makeImageOrVideoElem(msg.Element{
 		Type: "image",
-		Data: []msg.Pair{{K: "file", V: rsp.Url}},
+		Data: []msg.Pair{{K: "file", V: rsp.URL}},
 	}, false, sourceType)
 }
 
@@ -1032,7 +1032,7 @@ func (bot *CQBot) readVideoCache(b []byte) message.IMessageElement {
 			Size: r.ReadU32(),
 		},
 		Name: r.ReadStringWithLength("u32", true),
-		Uuid: r.ReadBytes(r.Len()),
+		UUID: r.ReadBytes(r.Len()),
 	}
 }
 

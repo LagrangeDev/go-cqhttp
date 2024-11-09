@@ -60,7 +60,7 @@ func (bot *CQBot) formatGroupMessage(m *message.GroupMessage) *event {
 		"font":        0,
 		"group_id":    m.GroupUin,
 		"message":     ToFormattedMessage(m.Elements, source),
-		"message_seq": m.Id,
+		"message_seq": m.ID,
 		"raw_message": cqm,
 		"sender": global.MSG{
 			"age":     0,
@@ -73,7 +73,7 @@ func (bot *CQBot) formatGroupMessage(m *message.GroupMessage) *event {
 	}
 	if m.Sender.IsAnonymous() {
 		gm["anonymous"] = global.MSG{
-			"flag": m.Sender.AnonymousInfo.AnonymousId + "|" + m.Sender.AnonymousInfo.AnonymousNick,
+			"flag": m.Sender.AnonymousInfo.AnonymousID + "|" + m.Sender.AnonymousInfo.AnonymousNick,
 			"id":   m.Sender.Uin,
 			"name": m.Sender.AnonymousInfo.AnonymousNick,
 		}

@@ -183,9 +183,9 @@ func (bot *CQBot) tempMessageEvent(_ *client.QQClient, e *client.TempMessageEven
 
 func (bot *CQBot) groupMutedEvent(c *client.QQClient, e *event2.GroupMute) {
 	g := c.GetCachedGroupInfo(e.GroupUin)
-	operator := c.GetCachedMemberInfo(c.GetUin(e.OperatorUid, e.GroupUin), e.GroupUin)
-	target := c.GetCachedMemberInfo(c.GetUin(e.TargetUid, e.GroupUin), e.GroupUin)
-	if e.TargetUid == "" {
+	operator := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID, e.GroupUin), e.GroupUin)
+	target := c.GetCachedMemberInfo(c.GetUin(e.TargetUID, e.GroupUin), e.GroupUin)
+	if e.TargetUID == "" {
 		if e.Duration != 0 {
 			log.Infof("群 %v 被 %v 开启全员禁言.",
 				formatGroupName(g), formatMemberName(operator))
@@ -223,8 +223,8 @@ func (bot *CQBot) groupMutedEvent(c *client.QQClient, e *event2.GroupMute) {
 func (bot *CQBot) groupRecallEvent(c *client.QQClient, e *event2.GroupRecall) {
 	g := c.GetCachedGroupInfo(e.GroupUin)
 	gid := db.ToGlobalID(int64(e.GroupUin), int32(e.Sequence))
-	operator := c.GetCachedMemberInfo(c.GetUin(e.OperatorUid, e.GroupUin), e.GroupUin)
-	Author := c.GetCachedMemberInfo(c.GetUin(e.AuthorUid, e.GroupUin), e.GroupUin)
+	operator := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID, e.GroupUin), e.GroupUin)
+	Author := c.GetCachedMemberInfo(c.GetUin(e.AuthorUID, e.GroupUin), e.GroupUin)
 	log.Infof("群 %v 内 %v 撤回了 %v 的消息: %v.",
 		formatGroupName(g), formatMemberName(operator), formatMemberName(Author), gid)
 
@@ -316,7 +316,7 @@ func (bot *CQBot) memberTitleUpdatedEvent(c *client.QQClient, e *event2.MemberSp
 }
 
 func (bot *CQBot) friendRecallEvent(c *client.QQClient, e *event2.FriendRecall) {
-	f := c.GetCachedFriendInfo(c.GetUin(e.FromUid))
+	f := c.GetCachedFriendInfo(c.GetUin(e.FromUID))
 	gid := db.ToGlobalID(int64(f.Uin), int32(e.Sequence))
 	//if f != nil {
 	log.Infof("好友 %v(%v) 撤回了消息: %v", f.Nickname, f.Uin, gid)
@@ -391,8 +391,8 @@ func (bot *CQBot) memberJoinEvent(c *client.QQClient, e *event2.GroupMemberIncre
 }
 
 func (bot *CQBot) memberLeaveEvent(c *client.QQClient, e *event2.GroupMemberDecrease) {
-	member := c.GetCachedMemberInfo(c.GetUin(e.MemberUid), e.GroupUin)
-	op := c.GetCachedMemberInfo(c.GetUin(e.OperatorUid), e.GroupUin)
+	member := c.GetCachedMemberInfo(c.GetUin(e.MemberUID), e.GroupUin)
+	op := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID), e.GroupUin)
 	group := c.GetCachedGroupInfo(e.GroupUin)
 	if e.IsKicked() {
 		log.Infof("成员 %v 被 %v T出了群 %v.", formatMemberName(member), formatMemberName(op), formatGroupName(group))
@@ -543,7 +543,7 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			data := binary.NewWriterF(func(w *binary.Builder) {
 				w.Write(i.Md5)
 				w.WritePacketString(i.FileUUID, "u32", true)
-				w.WritePacketString(i.ImageId, "u32", true)
+				w.WritePacketString(i.ImageID, "u32", true)
 			})
 			cache.Image.Insert(i.Md5, data)
 
@@ -552,7 +552,7 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			i.Name = strings.ReplaceAll(i.Name, "{", "")
 			i.Name = strings.ReplaceAll(i.Name, "}", "")
 			if !global.FileExists(path.Join(global.VoicePath, i.Name)) {
-				err := download.Request{URL: i.Url}.WriteToFile(path.Join(global.VoicePath, i.Name))
+				err := download.Request{URL: i.URL}.WriteToFile(path.Join(global.VoicePath, i.Name))
 				if err != nil {
 					log.Warnf("语音文件 %v 下载失败: %v", i.Name, err)
 					continue
@@ -563,11 +563,11 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 				w.Write(i.Md5)
 				w.Write(i.Sha1)
 				w.WritePacketString(i.Name, "u32", true)
-				w.WritePacketBytes(i.Uuid, "u32", true)
+				w.WritePacketBytes(i.UUID, "u32", true)
 			})
 			filename := hex.EncodeToString(i.Md5) + ".video"
 			cache.Video.Insert(i.Md5, data)
-			i.Url, _ = bot.Client.GetVideoUrl(source.SourceType == message.SourceGroup, i)
+			i.URL, _ = bot.Client.GetVideoURL(source.SourceType == message.SourceGroup, i)
 			i.Name = filename
 		}
 	}

@@ -12,7 +12,7 @@ import (
 
 	"github.com/LagrangeDev/LagrangeGo/utils"
 
-	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodeState"
+	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodestate"
 
 	"github.com/LagrangeDev/LagrangeGo/client/auth"
 
@@ -159,19 +159,19 @@ func qrcodeLogin() error {
 		}
 		prevState = s
 		switch s {
-		case qrcodeState.Canceled:
+		case qrcodestate.Canceled:
 			log.Fatalf("扫码被用户取消.")
-		case qrcodeState.Expired:
+		case qrcodestate.Expired:
 			log.Fatalf("二维码过期")
-		case qrcodeState.WaitingForConfirm:
+		case qrcodestate.WaitingForConfirm:
 			log.Infof("扫码成功, 请在手机端确认登录.")
-		case qrcodeState.Confirmed:
+		case qrcodestate.Confirmed:
 			err := cli.QRCodeLogin(1)
 			if err != nil {
 				return err
 			}
 			return cli.Register()
-		case qrcodeState.WaitingForScan:
+		case qrcodestate.WaitingForScan:
 			// ignore
 		}
 	}
