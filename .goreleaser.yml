@@ -1,5 +1,5 @@
-env:
-  - GO111MODULE=on
+version: 2
+
 before:
   hooks:
     - go mod tidy
@@ -69,6 +69,7 @@ changelog:
 
 archives:
   - id: binary
+    format: tar.gz
     builds:
       - win
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
@@ -76,6 +77,7 @@ archives:
       - goos: windows
         format: binary
   - id: nowin
+    format: tar.gz
     builds:
       - nowin
       - win
