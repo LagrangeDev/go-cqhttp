@@ -40,16 +40,16 @@ const (
 	HeaderSilk = "\x02#!SILK_V3"
 )
 
-// PathExists 判断给定path是否存在
+// PathExists 判断给定path是否存在且path为路径
 func PathExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || errors.Is(err, os.ErrExist)
+	file, err := os.Stat(path)
+	return (err == nil || errors.Is(err, os.ErrExist)) && file.IsDir()
 }
 
 // FileExists 判断给定path是否为存在且path为文件
 func FileExists(path string) bool {
-	fi, err := os.Stat(path)
-	return err == nil && !fi.IsDir()
+	file, err := os.Stat(path)
+	return (err == nil || errors.Is(err, os.ErrExist)) && !file.IsDir()
 }
 
 // ReadAllText 读取给定path对应文件，无法读取时返回空值
@@ -70,7 +70,7 @@ func WriteAllText(path, text string) error {
 // Check 检测err是否为nil
 func Check(err error, deleteSession bool) {
 	if err != nil {
-		if deleteSession && PathExists("session.token") {
+		if deleteSession && FileExists("session.token") {
 			_ = os.Remove("session.token")
 		}
 		log.Fatalf("遇到错误: %v", err)
@@ -90,7 +90,7 @@ func FindFile(file, cache, p string) (data []byte, err error) {
 	case strings.HasPrefix(file, "http"): // https also has prefix http
 		hash := md5.Sum([]byte(file))
 		cacheFile := path.Join(CachePath, hex.EncodeToString(hash[:])+".cache")
-		if (cache == "" || cache == "1") && PathExists(cacheFile) {
+		if (cache == "" || cache == "1") && FileExists(cacheFile) {
 			return os.ReadFile(cacheFile)
 		}
 		err = download.Request{URL: file}.WriteToFile(cacheFile)
@@ -122,7 +122,7 @@ func FindFile(file, cache, p string) (data []byte, err error) {
 		if err != nil {
 			return nil, err
 		}
-	case PathExists(path.Join(p, file)):
+	case FileExists(path.Join(p, file)):
 		data, err = os.ReadFile(path.Join(p, file))
 		if err != nil {
 			return nil, err

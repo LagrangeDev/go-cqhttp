@@ -274,7 +274,7 @@ func (bot *CQBot) CQGetGroupFileURL(groupID int64, fileID string, busID int32) g
 // https://docs.go-cqhttp.org/api/#%E4%B8%8A%E4%BC%A0%E7%BE%A4%E6%96%87%E4%BB%B6
 // @route(upload_group_file)
 func (bot *CQBot) CQUploadGroupFile(groupID int64, file, name, folder string) global.MSG {
-	if !global.PathExists(file) {
+	if !global.FileExists(file) {
 		log.Warnf("上传群文件 %v 失败: 文件不存在", file)
 		return Failed(100, "FILE_NOT_FOUND", "文件不存在")
 	}
@@ -289,7 +289,7 @@ func (bot *CQBot) CQUploadGroupFile(groupID int64, file, name, folder string) gl
 //
 // @route(upload_private_file)
 func (bot *CQBot) CQUploadPrivateFile(userID int64, file, name string) global.MSG {
-	if !global.PathExists(file) {
+	if !global.FileExists(file) {
 		log.Warnf("上传群文件 %v 失败: 文件不存在", file)
 		return Failed(100, "FILE_NOT_FOUND", "文件不存在")
 	}
@@ -1141,7 +1141,7 @@ func (bot *CQBot) CQGetImage(file string) global.MSG {
 	}
 
 	if b == nil {
-		if !global.PathExists(path.Join(global.ImagePath, file)) {
+		if !global.FileExists(path.Join(global.ImagePath, file)) {
 			return Failed(100)
 		}
 		b, err = os.ReadFile(path.Join(global.ImagePath, file))
@@ -1156,7 +1156,7 @@ func (bot *CQBot) CQGetImage(file string) global.MSG {
 			"url":      r.ReadStringWithLength("u32", true),
 		}
 		local := path.Join(global.CachePath, file+path.Ext(msg["filename"].(string)))
-		if !global.PathExists(local) {
+		if !global.FileExists(local) {
 			r := download.Request{URL: msg["url"].(string)}
 			if err := r.WriteToFile(local); err != nil {
 				log.Warnf("下载图片 %v 时出现错误: %v", msg["url"], err)
@@ -1195,7 +1195,7 @@ func (bot *CQBot) CQDownloadFile(url string, headers gjson.Result, threadCount i
 
 	hash := md5.Sum([]byte(url))
 	file := path.Join(global.CachePath, hex.EncodeToString(hash[:])+".cache")
-	if global.PathExists(file) {
+	if global.FileExists(file) {
 		if err := os.Remove(file); err != nil {
 			log.Warnf("删除缓存文件 %v 时出现错误: %v", file, err)
 			return Failed(100, "DELETE_FILE_ERROR", err.Error())

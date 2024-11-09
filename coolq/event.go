@@ -551,7 +551,7 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			// todo: don't download original file?
 			i.Name = strings.ReplaceAll(i.Name, "{", "")
 			i.Name = strings.ReplaceAll(i.Name, "}", "")
-			if !global.PathExists(path.Join(global.VoicePath, i.Name)) {
+			if !global.FileExists(path.Join(global.VoicePath, i.Name)) {
 				err := download.Request{URL: i.Url}.WriteToFile(path.Join(global.VoicePath, i.Name))
 				if err != nil {
 					log.Warnf("语音文件 %v 下载失败: %v", i.Name, err)

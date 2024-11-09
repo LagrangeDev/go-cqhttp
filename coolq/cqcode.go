@@ -856,7 +856,7 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 			_, _ = video.Seek(0, io.SeekStart)
 			hash, _ := crypto.ComputeMd5AndLength(video)
 			cacheFile := path.Join(global.CachePath, hex.EncodeToString(hash)+".mp4")
-			if !(elem.Get("cache") == "" || elem.Get("cache") == "1") || !global.PathExists(cacheFile) {
+			if !(elem.Get("cache") == "" || elem.Get("cache") == "1") || !global.FileExists(cacheFile) {
 				err = global.EncodeMP4(v.File, cacheFile)
 				if err != nil {
 					return nil, err
@@ -893,7 +893,7 @@ func (bot *CQBot) makeImageOrVideoElem(elem msg.Element, video bool, sourceType 
 			maxSize = maxVideoSize
 		}
 		thread, _ := strconv.Atoi(elem.Get("c"))
-		exist := global.PathExists(cacheFile)
+		exist := global.FileExists(cacheFile)
 		if exist && (elem.Get("cache") == "" || elem.Get("cache") == "1") {
 			goto useCacheFile
 		}
@@ -963,7 +963,7 @@ func (bot *CQBot) makeImageOrVideoElem(elem msg.Element, video bool, sourceType 
 			}
 		}
 		rawPath = path.Join(global.VideoPath, f)
-		if !global.PathExists(rawPath) {
+		if !global.FileExists(rawPath) {
 			return nil, errors.New("invalid video")
 		}
 		if path.Ext(rawPath) != ".video" {

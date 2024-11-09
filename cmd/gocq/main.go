@@ -117,7 +117,7 @@ func LoginInteract() {
 		}
 	}
 
-	if !global.PathExists("session.token") {
+	if !global.FileExists("session.token") {
 		log.Info("不存在会话缓存，使用二维码登录.")
 		if !base.FastStart {
 			log.Warn("将在 5秒 后继续.")
@@ -130,7 +130,7 @@ func LoginInteract() {
 		log.SetLevel(log.DebugLevel)
 		log.Warnf("已开启Debug模式.")
 	}
-	if !global.PathExists("device.json") {
+	if !global.FileExists("device.json") {
 		log.Warn("虚拟设备信息不存在, 将自动生成随机设备.")
 		device = auth.NewDeviceInfo(int(crypto.RandU32()))
 		_ = device.Save("device.json")
@@ -159,7 +159,7 @@ func LoginInteract() {
 		base.AccountToken, _ = cli.Sig().Marshal()
 		_ = os.WriteFile("session.token", base.AccountToken, 0o644)
 	}
-	if global.PathExists("session.token") {
+	if global.FileExists("session.token") {
 		token, _ := os.ReadFile("session.token")
 		sig, err := auth.UnmarshalSigInfo(token, true)
 		if err == nil {
@@ -316,7 +316,7 @@ func newClient(appInfo *auth.AppInfo) *client.QQClient {
 	//	log.Infof("收到服务器地址更新通知, 将在下一次重连时应用. ")
 	//	return true
 	//})
-	if global.PathExists("address.txt") {
+	if global.FileExists("address.txt") {
 		log.Infof("检测到 address.txt 文件. 将覆盖目标IP.")
 		addr := global.ReadAddrFile("address.txt")
 		if len(addr) > 0 {
