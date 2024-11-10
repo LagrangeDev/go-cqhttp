@@ -532,8 +532,8 @@ func (bot *CQBot) CQSendGroupForwardMessage(groupID int64, m gjson.Result) globa
 		return Failed(100)
 	}
 	source := message.Source{
-		SourceType: message.SourcePrivate,
-		PrimaryID:  0,
+		SourceType: message.SourceGroup,
+		PrimaryID:  groupID,
 	}
 	fe, err := bot.uploadForwardElement(m, groupID, message.SourceGroup)
 	if err != nil {

@@ -138,14 +138,13 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		//			{K: "title", V: o.Title},
 		//		},
 		//	}
-		// TODO ForwardElement
-		//case *message.ForwardElement:
-		//	m = msg.Element{
-		//		Type: "forward",
-		//		Data: pairs{
-		//			{K: "id", V: o.ResId},
-		//		},
-		//	}
+		case *message.ForwardMessage:
+			m = msg.Element{
+				Type: "forward",
+				Data: pairs{
+					{K: "id", V: o.ResID},
+				},
+			}
 		case *message.FaceElement:
 			m = msg.Element{
 				Type: "face",
@@ -319,16 +318,16 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 		//		"type": "redbag",
 		//		"data": global.MSG{"title": o.Title, "type": int(o.MsgType)},
 		//	}
-		//case *message.ForwardElement:
-		//	m = global.MSG{
-		//		"type": "forward",
-		//		"data": global.MSG{"id": o.ResId},
-		//	}
-		//case *message.FaceElement:
-		//	m = global.MSG{
-		//		"type": "face",
-		//		"data": global.MSG{"id": o.Index},
-		//	}
+		case *message.ForwardMessage:
+			m = global.MSG{
+				"type": "forward",
+				"data": global.MSG{"id": o.ResID},
+			}
+		case *message.FaceElement:
+			m = global.MSG{
+				"type": "face",
+				"data": global.MSG{"id": o.FaceID},
+			}
 		case *message.VoiceElement:
 			m = global.MSG{
 				"type": "record",
@@ -657,16 +656,16 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 		return img, nil
 	case "reply":
 		return bot.reply(spec, elem, sourceType)
-	//case "forward":
-	//	id := elem.Get("id")
-	//	if id == "" {
-	//		return nil, errors.New("forward 消息中必须包含 id")
-	//	}
-	//	fwdMsg := bot.Client.DownloadForwardMessage(id)
-	//	if fwdMsg == nil {
-	//		return nil, errors.New("forward 消息不存在或已过期")
-	//	}
-	//	return fwdMsg, nil
+	case "forward":
+		id := elem.Get("id")
+		if id == "" {
+			return nil, errors.New("forward 消息中必须包含 id")
+		}
+		fwdMsg, err := bot.Client.FetchForwardMsg(id)
+		if err != nil {
+			return nil, errors.New("forward 消息不存在或已过期")
+		}
+		return fwdMsg, nil
 
 	case "poke":
 		t, _ := strconv.ParseInt(elem.Get("qq"), 10, 64)
