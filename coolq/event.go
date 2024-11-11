@@ -206,17 +206,17 @@ func (bot *CQBot) groupMutedEvent(c *client.QQClient, e *event2.GroupMute) {
 	if e.Duration == 0 {
 		typ = "notice/group_ban/lift_ban"
 	}
-	var userId uint32
+	var userID uint32
 	if target != nil {
-		userId = target.Uin
+		userID = target.Uin
 	} else {
-		userId = 0
+		userID = 0
 	}
 	bot.dispatchEvent(typ, global.MSG{
 		"duration":    e.Duration,
 		"group_id":    e.GroupUin,
 		"operator_id": operator.Uin,
-		"user_id":     userId,
+		"user_id":     userID,
 	})
 }
 

@@ -55,7 +55,6 @@ func replyID(r *message.ReplyElement, source message.Source) int32 {
 	if source.SourceType == message.SourcePrivate && (r.SenderUin == uint32(source.PrimaryID) || r.GroupUin == uint32(source.PrimaryID) || r.GroupUin == 0) {
 		// 私聊似乎腾讯服务器有bug?
 		// ?
-		seq = seq
 		id = int64(r.SenderUin)
 	}
 	return db.ToGlobalID(id, int32(seq))
@@ -100,7 +99,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		case *message.ReplyElement:
 			if base.RemoveReplyAt && i+1 < len(e) {
 				elem, ok := e[i+1].(*message.AtElement)
-				if ok && elem.TargetUin == uint32(o.SenderUin) {
+				if ok && elem.TargetUin == o.SenderUin {
 					e[i+1] = nil
 				}
 			}
@@ -183,10 +182,6 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 			//	data = append(data, pair{K: "type", V: "show"})
 			//	data = append(data, pair{K: "id", V: strconv.FormatInt(int64(o.EffectID), 10)})
 			//}
-			m = msg.Element{
-				Type: "image",
-				Data: data,
-			}
 			m = msg.Element{
 				Type: "image",
 				Data: data,
@@ -1005,13 +1000,13 @@ func (bot *CQBot) readImageCache(b []byte, sourceType message.SourceType) (messa
 	}
 	r := binary.NewReader(b)
 	hash := r.ReadBytes(16)
-	fileUuid := r.ReadStringWithLength("u32", true)
+	fileUUID := r.ReadStringWithLength("u32", true)
 	var rsp *message.ImageElement
 	switch sourceType { // nolint:exhaustive
 	case message.SourceGroup:
-		rsp, err = bot.Client.QueryGroupImage(hash, fileUuid)
+		rsp, err = bot.Client.QueryGroupImage(hash, fileUUID)
 	default:
-		rsp, err = bot.Client.QueryFriendImage(hash, fileUuid)
+		rsp, err = bot.Client.QueryFriendImage(hash, fileUUID)
 	}
 	if err != nil || rsp.URL == "" {
 		return nil, errors.New("unsuport error")

@@ -77,7 +77,7 @@ func printQRCode(imgData []byte) {
 
 	padding := 0
 	lastColor := img.At(padding, padding).(color.Gray).Y
-	for padding += 1; padding < bound; padding++ {
+	for padding++; padding < bound; padding++ {
 		if img.At(padding, padding).(color.Gray).Y != lastColor {
 			break
 		}
