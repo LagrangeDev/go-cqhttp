@@ -541,7 +541,12 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			//	}
 			//}
 			data := binary.NewWriterF(func(w *binary.Builder) {
-				w.Write(i.Md5)
+				_, err := w.Write(i.Md5)
+				if err != nil {
+					log.Warnf("计算图片md5时出现错误: %v", err)
+					return
+				}
+
 				w.WritePacketString(i.FileUUID, "u32", true)
 				w.WritePacketString(i.ImageID, "u32", true)
 			})
@@ -560,8 +565,12 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			}
 		case *message.ShortVideoElement:
 			data := binary.NewWriterF(func(w *binary.Builder) {
-				w.Write(i.Md5)
-				w.Write(i.Sha1)
+				_, err := w.Write(i.Md5)
+				_, err = w.Write(i.Sha1)
+				if err != nil {
+					log.Warnf("计算视频sha1时出现错误: %v", err)
+					return
+				}
 				w.WritePacketString(i.Name, "u32", true)
 				w.WritePacketBytes(i.UUID, "u32", true)
 			})
