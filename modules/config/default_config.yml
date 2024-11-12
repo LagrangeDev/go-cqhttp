@@ -1,6 +1,10 @@
 # go-cqhttp 默认配置文件
 
 account: # 账号相关
+  uin: 1233456 # QQ账号
+  password: '' # 密码为空时使用扫码登录
+  encrypt: false  # 是否开启密码加密
+  status: 0      # 在线状态 请参考 https://docs.go-cqhttp.org/guide/config.html#在线状态
   relogin: # 重连设置
     delay: 3   # 首次重连延迟, 单位秒
     interval: 3   # 重连间隔
@@ -14,16 +18,14 @@ account: # 账号相关
 
   # 数据包的签名服务器列表，第一个作为主签名服务器，后续作为备用
   # 与android签名不兼容
-  # 如果遇到 登录 45 错误, 或者发送信息风控的话需要填入一个或多个服务器
-  # 不建议设置过多，设置主备各一个即可，超过 5 个只会取前五个
   # 示例:
-  # sign-servers: 
+  # sign-servers:
   #   - url: 'http://127.0.0.1:8080' # 本地签名服务器
   #   - url: 'https://signserver.example.com' # 线上签名服务器
   #   ...
-  # 
+  #
   # 服务器不提供自建
-  sign-servers: 
+  sign-servers:
     - url: 'https://sign.ciallo.site/api/sign'  # 主签名服务器地址， 必填
     - url: 'https://sign.lagrangecore.org/api/sign/25765'  # 备用
 

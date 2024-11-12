@@ -4,11 +4,12 @@ go 1.20
 
 require (
 	github.com/FloatTech/sqlite v1.6.3
-	github.com/LagrangeDev/LagrangeGo v0.1.1
+	github.com/LagrangeDev/LagrangeGo v0.1.2-0.20241112102104-63ccad50ea67
 	github.com/Microsoft/go-winio v0.6.2-0.20230724192519-b29bbd58a65a
 	github.com/RomiChan/syncx v0.0.0-20240418144900-b7402ffdebc7
 	github.com/RomiChan/websocket v1.4.3-0.20220227141055-9b2c6168c9c5
 	github.com/fumiama/go-base16384 v1.7.0
+	github.com/fumiama/go-hide-param v0.2.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/mattn/go-colorable v0.1.13
 	github.com/pkg/errors v0.9.1
@@ -22,6 +23,7 @@ require (
 	golang.org/x/crypto v0.29.0
 	golang.org/x/image v0.18.0
 	golang.org/x/sys v0.27.0
+	golang.org/x/term v0.26.0
 	golang.org/x/time v0.3.0
 	gopkg.ilharper.com/x/isatty v1.1.1
 	gopkg.in/yaml.v3 v3.0.1
