@@ -8,16 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/LagrangeDev/LagrangeGo/utils/binary"
-
-	"github.com/LagrangeDev/LagrangeGo/client/entity"
-
-	event2 "github.com/LagrangeDev/LagrangeGo/client/event"
-
-	"github.com/LagrangeDev/LagrangeGo/message"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/LagrangeDev/LagrangeGo/client"
-	log "github.com/sirupsen/logrus"
+	"github.com/LagrangeDev/LagrangeGo/client/entity"
+	event2 "github.com/LagrangeDev/LagrangeGo/client/event"
+	"github.com/LagrangeDev/LagrangeGo/message"
+	"github.com/LagrangeDev/LagrangeGo/utils/binary"
 
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
@@ -569,7 +566,7 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			})
 			filename := hex.EncodeToString(i.Md5) + ".video"
 			cache.Video.Insert(i.Md5, data)
-			i.URL, _ = bot.Client.GetVideoURL(source.SourceType == message.SourceGroup, i)
+			i.URL, _ = bot.Client.GetVideoURL(source.SourceType == message.SourceGroup, i.UUID)
 			i.Name = filename
 		}
 	}
