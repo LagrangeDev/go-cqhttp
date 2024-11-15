@@ -13,13 +13,11 @@ import (
 
 	"github.com/Mrs4s/go-cqhttp/internal/download"
 
+	"github.com/LagrangeDev/LagrangeGo/client"
+	"github.com/LagrangeDev/LagrangeGo/client/auth"
+	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodestate"
 	"github.com/LagrangeDev/LagrangeGo/utils"
 
-	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodestate"
-
-	"github.com/LagrangeDev/LagrangeGo/client/auth"
-
-	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -209,7 +207,7 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 				readLine()
 				os.Exit(0)
 			}
-			res, err = cli.SubmitCaptcha(strings.Split(strings.Split(res.VerifyURL, "sid=")[1], "&")[0], ticket, randStr)
+			res, err = cli.SubmitCaptcha(ticket, randStr, strings.Split(strings.Split(res.VerifyURL, "sid=")[1], "&")[0])
 			continue
 		//case client.NeedCaptcha:
 		//	log.Warnf("登录需要验证码.")
