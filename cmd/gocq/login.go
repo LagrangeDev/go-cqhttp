@@ -11,17 +11,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Mrs4s/go-cqhttp/internal/download"
+	"github.com/mattn/go-colorable"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"gopkg.ilharper.com/x/isatty"
 
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/client/auth"
 	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodestate"
 	"github.com/LagrangeDev/LagrangeGo/utils"
 
-	"github.com/mattn/go-colorable"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"gopkg.ilharper.com/x/isatty"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 )
 
 var console = bufio.NewReader(os.Stdin)
@@ -50,7 +50,7 @@ func readIfTTY(de string) (str string) {
 	if isatty.Isatty(os.Stdin.Fd()) {
 		return readLine()
 	}
-	log.Warnf("未检测到输入终端，自动选择%s.", de)
+	logrus.Warnf("未检测到输入终端，自动选择%s.", de)
 	return de
 }
 
@@ -78,7 +78,7 @@ func printQRCode(imgData []byte) {
 	)
 	img, err := png.Decode(bytes.NewReader(imgData))
 	if err != nil {
-		log.Panic(err)
+		logrus.Panic(err)
 	}
 
 	bound := img.Bounds().Max.X
@@ -121,7 +121,7 @@ func printQRCodeCommon(imgData []byte) {
 	)
 	img, err := png.Decode(bytes.NewReader(imgData))
 	if err != nil {
-		log.Panic(err)
+		logrus.Panic(err)
 	}
 	data := img.(*image.Gray).Pix
 	bound := img.Bounds().Max.X
@@ -150,9 +150,9 @@ func qrcodeLogin() error {
 	_ = os.WriteFile("qrcode.png", qrcodeData, 0o644)
 	defer func() { _ = os.Remove("qrcode.png") }()
 	if cli.Uin != 0 {
-		log.Infof("请使用账号 %v 登录手机QQ扫描二维码 (qrcode.png) : ", cli.Uin)
+		logrus.Infof("请使用账号 %v 登录手机QQ扫描二维码 (qrcode.png) : ", cli.Uin)
 	} else {
-		log.Infof("请使用手机QQ扫描二维码 (qrcode.png) : ")
+		logrus.Infof("请使用手机QQ扫描二维码 (qrcode.png) : ")
 	}
 	time.Sleep(time.Second)
 	printQRCode(qrcodeData)
@@ -170,11 +170,11 @@ func qrcodeLogin() error {
 		prevState = s
 		switch s {
 		case qrcodestate.Canceled:
-			log.Fatalf("扫码被用户取消.")
+			logrus.Fatalf("扫码被用户取消.")
 		case qrcodestate.Expired:
-			log.Fatalf("二维码过期")
+			logrus.Fatalf("二维码过期")
 		case qrcodestate.WaitingForConfirm:
-			log.Infof("扫码成功, 请在手机端确认登录.")
+			logrus.Infof("扫码成功, 请在手机端确认登录.")
 		case qrcodestate.Confirmed:
 			res, err := cli.QRCodeLogin()
 			if err != nil {
@@ -200,72 +200,72 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 		//nolint:exhaustive
 		switch res.Error {
 		case client.SliderNeededError:
-			log.Warnf("登录需要滑条验证码, 请验证后重试.")
+			logrus.Warnf("登录需要滑条验证码, 请验证后重试.")
 			ticket, randStr := getTicket(res.VerifyURL)
 			if ticket == "" {
-				log.Infof("按 Enter 继续....")
+				logrus.Infof("按 Enter 继续....")
 				readLine()
 				os.Exit(0)
 			}
 			res, err = cli.SubmitCaptcha(ticket, randStr, strings.Split(strings.Split(res.VerifyURL, "sid=")[1], "&")[0])
 			continue
 		//case client.NeedCaptcha:
-		//	log.Warnf("登录需要验证码.")
+		//	logrus.Warnf("登录需要验证码.")
 		//	_ = os.WriteFile("captcha.jpg", res.CaptchaImage, 0o644)
-		//	log.Warnf("请输入验证码 (captcha.jpg)： (Enter 提交)")
+		//	logrus.Warnf("请输入验证码 (captcha.jpg)： (Enter 提交)")
 		//	text = readLine()
 		//	global.DelFile("captcha.jpg")
 		//	res, err = cli.SubmitCaptcha(text, res.CaptchaSign)
 		//	continue
 		// TODO 短信验证码?
 		//case client.SMSNeededError:
-		//	log.Warnf("账号已开启设备锁, 按 Enter 向手机 %v 发送短信验证码.", res.SMSPhone)
+		//	logrus.Warnf("账号已开启设备锁, 按 Enter 向手机 %v 发送短信验证码.", res.SMSPhone)
 		//	readLine()
 		//	if !cli.RequestSMS() {
-		//		log.Warnf("发送验证码失败，可能是请求过于频繁.")
+		//		logrus.Warnf("发送验证码失败，可能是请求过于频繁.")
 		//		return errors.WithStack(ErrSMSRequestError)
 		//	}
-		//	log.Warn("请输入短信验证码： (Enter 提交)")
+		//	logrus.Warn("请输入短信验证码： (Enter 提交)")
 		//	text = readLine()
 		//	res, err = cli.SubmitSMS(text)
 		//	continue
 		// TODO 设备锁?
 		//case client.SMSOrVerifyNeededError:
-		//	log.Warnf("账号已开启设备锁，请选择验证方式:")
-		//	log.Warnf("1. 向手机 %v 发送短信验证码", res.SMSPhone)
-		//	log.Warnf("2. 使用手机QQ扫码验证.")
-		//	log.Warn("请输入(1 - 2)：")
+		//	logrus.Warnf("账号已开启设备锁，请选择验证方式:")
+		//	logrus.Warnf("1. 向手机 %v 发送短信验证码", res.SMSPhone)
+		//	logrus.Warnf("2. 使用手机QQ扫码验证.")
+		//	logrus.Warn("请输入(1 - 2)：")
 		//	text = readIfTTY("2")
 		//	if strings.Contains(text, "1") {
 		//		if !cli.RequestSMS() {
-		//			log.Warnf("发送验证码失败，可能是请求过于频繁.")
+		//			logrus.Warnf("发送验证码失败，可能是请求过于频繁.")
 		//			return errors.WithStack(ErrSMSRequestError)
 		//		}
-		//		log.Warn("请输入短信验证码： (Enter 提交)")
+		//		logrus.Warn("请输入短信验证码： (Enter 提交)")
 		//		text = readLine()
 		//		res, err = cli.SubmitSMS(text)
 		//		continue
 		//	}
 		//	fallthrough
 		case client.UnsafeDeviceError:
-			log.Warnf("账号已开启设备锁，请前往 -> %v <- 验证后重启Bot.", res.VerifyURL)
-			log.Infof("按 Enter 或等待 5s 后继续....")
+			logrus.Warnf("账号已开启设备锁，请前往 -> %v <- 验证后重启Bot.", res.VerifyURL)
+			logrus.Infof("按 Enter 或等待 5s 后继续....")
 			readLineTimeout(time.Second * 5)
 			os.Exit(0)
 		case client.OtherLoginError, client.UnknownLoginError, client.TooManySMSRequestError:
 			fallthrough
 		default:
 			msg := res.ErrorMessage
-			log.Warnf("登录失败: %v Code: %v", msg, res.Code)
+			logrus.Warnf("登录失败: %v Code: %v", msg, res.Code)
 			switch res.Code {
 			case 235:
-				log.Warnf("设备信息被封禁, 请删除 device.json 后重试.")
+				logrus.Warnf("设备信息被封禁, 请删除 device.json 后重试.")
 			case 237:
-				log.Warnf("登录过于频繁, 请在手机QQ登录并根据提示完成认证后等一段时间重试")
+				logrus.Warnf("登录过于频繁, 请在手机QQ登录并根据提示完成认证后等一段时间重试")
 			case 45:
-				log.Warnf("你的账号被限制登录, 请配置 SignServer 后重试")
+				logrus.Warnf("你的账号被限制登录, 请配置 SignServer 后重试")
 			}
-			log.Infof("按 Enter 继续....")
+			logrus.Infof("按 Enter 继续....")
 			readLine()
 			os.Exit(0)
 		}
@@ -273,10 +273,10 @@ func loginResponseProcessor(res *client.LoginResponse) error {
 }
 
 func getTicket(u string) (string, string) {
-	log.Warnf("请选择提交滑块ticket方式:")
-	log.Warnf("1. 自动提交")
-	log.Warnf("2. 手动抓取提交")
-	log.Warn("请输入(1 - 2)：")
+	logrus.Warnf("请选择提交滑块ticket方式:")
+	logrus.Warnf("1. 自动提交")
+	logrus.Warnf("2. 手动抓取提交")
+	logrus.Warn("请输入(1 - 2)：")
 	text := readLine()
 	id := utils.NewUUID()
 	auto := !strings.Contains(text, "2")
@@ -284,11 +284,11 @@ func getTicket(u string) (string, string) {
 	if auto {
 		u = strings.ReplaceAll(u, "https://ti.qq.com/safe/tools/captcha/sms-verify-login?", fmt.Sprintf("https://captcha.go-cqhttp.org/captcha?id=%v&", id))
 	}
-	log.Warnf("请前往该地址验证 -> %v ", u)
+	logrus.Warnf("请前往该地址验证 -> %v ", u)
 	if !auto {
-		log.Warn("请输入ticket： (Enter 提交)")
+		logrus.Warn("请输入ticket： (Enter 提交)")
 		ticket := readLine()
-		log.Warn("请输入rand_str： (Enter 提交)")
+		logrus.Warn("请输入rand_str： (Enter 提交)")
 		randStr := readLine()
 		return ticket, randStr
 	}
@@ -300,14 +300,14 @@ func getTicket(u string) (string, string) {
 		}
 		time.Sleep(time.Second)
 	}
-	log.Warnf("验证超时")
+	logrus.Warnf("验证超时")
 	return "", ""
 }
 
 func fetchCaptcha(id string) (string, string) {
 	g, err := download.Request{URL: "https://captcha.go-cqhttp.org/captcha/ticket?id=" + id}.JSON()
 	if err != nil {
-		log.Debugf("获取 Ticket 时出现错误: %v", err)
+		logrus.Debugf("获取 Ticket 时出现错误: %v", err)
 		return "", ""
 	}
 	if g.Get("ticket").Exists() && g.Get("randstr").Exists() {
