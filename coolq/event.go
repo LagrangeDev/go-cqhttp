@@ -13,12 +13,13 @@ import (
 	event2 "github.com/LagrangeDev/LagrangeGo/client/event"
 	"github.com/LagrangeDev/LagrangeGo/message"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
 	"github.com/Mrs4s/go-cqhttp/internal/cache"
 	"github.com/Mrs4s/go-cqhttp/internal/download"
-	log "github.com/sirupsen/logrus"
 )
 
 // ToFormattedMessage 将给定[]message.IMessageElement转换为通过coolq.SetMessageFormat所定义的消息上报格式

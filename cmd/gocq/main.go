@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -18,21 +19,24 @@ import (
 	"github.com/LagrangeDev/LagrangeGo/client/packets/pb/action"
 	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/crypto"
+	para "github.com/fumiama/go-hide-param"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
+	"golang.org/x/crypto/pbkdf2"
+	"golang.org/x/term"
+
 	"github.com/Mrs4s/go-cqhttp/coolq"
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/Mrs4s/go-cqhttp/global/terminal"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
 	"github.com/Mrs4s/go-cqhttp/internal/cache"
+	"github.com/Mrs4s/go-cqhttp/internal/download"
 	"github.com/Mrs4s/go-cqhttp/internal/selfdiagnosis"
 	"github.com/Mrs4s/go-cqhttp/internal/selfupdate"
 	"github.com/Mrs4s/go-cqhttp/modules/servers"
 	"github.com/Mrs4s/go-cqhttp/server"
-	para "github.com/fumiama/go-hide-param"
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/pbkdf2"
-	"golang.org/x/term"
 )
 
 // InitBase 解析参数并检测
@@ -208,12 +212,29 @@ func LoginInteract() {
 		time.Sleep(time.Second * 5)
 	}
 	log.Info("开始尝试登录并同步消息...")
-	app := auth.AppList["linux"]["3.2.10-25765"]
-	log.Infof("使用协议: %s %s", app.OS, app.CurrentVersion)
+	app := auth.AppList["linux"]["3.2.15-30366"]
+	log.Infof("使用协议: %s", app.CurrentVersion)
 	cli = newClient(app)
 	cli.UseDevice(device)
 	isQRCodeLogin := (base.Account.Uin == 0 || len(base.Account.Password) == 0) && !base.Account.Encrypt
 	isTokenLogin := false
+
+	// 加载本地版本信息, 一般是在上次登录时保存的
+	versionFile := path.Join(global.VersionsPath, "7.json")
+	if global.FileExists(versionFile) {
+		b, err := os.ReadFile(versionFile)
+		if err != nil {
+			log.Warnf("从文件 %s 读取本地版本信息文件出错.", versionFile)
+			os.Exit(0)
+		}
+		info, err := auth.UnmarshalAppInfo(b)
+		if err != nil {
+			log.Warnf("从文件 %s 解析本地版本信息出错: %v", versionFile, err)
+			os.Exit(0)
+		}
+		cli.UseVersion(info)
+		log.Infof("从文件 %s 读取协议版本 %s.", versionFile, cli.Version().CurrentVersion)
+	}
 
 	saveToken := func() {
 		base.AccountToken, _ = cli.Sig().Marshal()
@@ -252,6 +273,34 @@ func LoginInteract() {
 	if base.Account.Uin != 0 && base.PasswordHash != [16]byte{} {
 		cli.Uin = uint32(base.Account.Uin)
 		cli.PasswordMD5 = base.PasswordHash
+	}
+	if !base.FastStart {
+		log.Infof("正在检查协议更新...")
+		currentVersionName := cli.Version().CurrentVersion
+		remoteVersion, err := getRemoteLatestProtocolVersion(7)
+		if err == nil {
+			remoteVersionName := gjson.GetBytes(remoteVersion, "current_version").String()
+			if remoteVersionName != currentVersionName {
+				switch {
+				case !base.UpdateProtocol:
+					log.Infof("检测到协议更新: %s -> %s", currentVersionName, remoteVersionName)
+					log.Infof("如果登录时出现版本过低错误, 可尝试使用 -update-protocol 参数启动")
+				case !isTokenLogin:
+					info, _ := auth.UnmarshalAppInfo(remoteVersion)
+					cli.UseVersion(info)
+					err := os.WriteFile(versionFile, remoteVersion, 0644)
+					log.Infof("协议版本已更新: %s -> %s", currentVersionName, remoteVersionName)
+					if err != nil {
+						log.Warnln("更新协议版本缓存文件", versionFile, "失败:", err)
+					}
+				default:
+					log.Infof("检测到协议更新: %s -> %s", currentVersionName, remoteVersionName)
+					log.Infof("由于使用了会话缓存, 无法自动更新协议, 请删除缓存后重试")
+				}
+			}
+		} else if err.Error() != "remote version unavailable" {
+			log.Warnf("检查协议更新失败: %v", err)
+		}
 	}
 	if !isTokenLogin {
 		if !isQRCodeLogin {
@@ -414,22 +463,23 @@ func newClient(app *auth.AppInfo) *client.QQClient {
 	return c
 }
 
-// var remoteVersions = map[int]string{
-//	1: "https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json",
-//	6: "https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json",
-//}
-//
-//func getRemoteLatestProtocolVersion(protocolType int) ([]byte, error) {
-//	url, ok := remoteVersions[protocolType]
-//	if !ok {
-//		return nil, errors.New("remote version unavailable")
-//	}
-//	response, err := download.Request{URL: url}.Bytes()
-//	if err != nil {
-//		return download.Request{URL: "https://ghproxy.com/" + url}.Bytes()
-//	}
-//	return response, nil
-//}
+var remoteVersions = map[int]string{
+	1: "https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_phone.json",
+	6: "https://raw.githubusercontent.com/RomiChan/protocol-versions/master/android_pad.json",
+	7: "https://raw.githubusercontent.com/LagrangeDev/protocol-versions/refs/heads/master/LagrangeGo/latest.json",
+}
+
+func getRemoteLatestProtocolVersion(protocolType int) ([]byte, error) {
+	url, ok := remoteVersions[protocolType]
+	if !ok {
+		return nil, errors.New("remote version unavailable")
+	}
+	response, err := download.Request{URL: url}.Bytes()
+	if err != nil {
+		return download.Request{URL: "https://www.ghproxy.cn/" + url}.Bytes()
+	}
+	return response, nil
+}
 
 type protocolLogger struct{}
 
