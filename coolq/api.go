@@ -1411,6 +1411,21 @@ func (bot *CQBot) CQSetGroupPortrait(groupID int64, file, cache string) global.M
 	return Failed(100, "GROUP_NOT_FOUND", "群聊不存在")
 }
 
+// CQSetGroupReaction 扩展API-设置群消息表态
+//
+// @route(set_group_reaction)
+func (bot *CQBot) CQSetGroupReaction(messageID int32, emojiID string, isAdd bool) global.MSG {
+	msg, err := db.GetGroupMessageByGlobalID(messageID)
+	if err != nil {
+		return Failed(100, "MESSAGE_NOT_FOUND", "消息不存在")
+	}
+	if err := bot.Client.SetGroupReaction(uint32(msg.GroupCode), uint32(msg.Attribute.MessageSeq), emojiID, isAdd); err != nil {
+		log.Warnf("发送群表态失败: %v", err)
+		return Failed(100, "SEND_GROUP_REACTIONS_ERROR", err.Error())
+	}
+	return OK(nil)
+}
+
 // CQSetGroupAnonymousBan 群组匿名用户禁言
 //
 // https://git.io/Jtz1p

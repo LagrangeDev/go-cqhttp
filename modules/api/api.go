@@ -256,6 +256,14 @@ func (c *Caller) call(action string, spec *onebot.Spec, p Getter) global.MSG {
 		p1 := p.Get("file").String()
 		p2 := p.Get("cache").String()
 		return c.bot.CQSetGroupPortrait(p0, p1, p2)
+	case "set_group_reaction":
+		p0 := int32(p.Get("message_id").Int())
+		p1 := p.Get("emoji_id").String()
+		p2 := true
+		if pt := p.Get("is_add"); pt.Exists() {
+			p2 = pt.Bool()
+		}
+		return c.bot.CQSetGroupReaction(p0, p1, p2)
 	case "set_group_special_title":
 		p0 := p.Get("group_id").Int()
 		p1 := p.Get("user_id").Int()
@@ -279,6 +287,6 @@ func (c *Caller) call(action string, spec *onebot.Spec, p Getter) global.MSG {
 		p1 := p.Get("file").String()
 		p2 := p.Get("name").String()
 		return c.bot.CQUploadPrivateFile(p0, p1, p2)
-	}
+}
 	return coolq.Failed(404, "API_NOT_FOUND", "API不存在")
 }
