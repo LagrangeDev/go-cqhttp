@@ -287,6 +287,6 @@ func (c *Caller) call(action string, spec *onebot.Spec, p Getter) global.MSG {
 		p1 := p.Get("file").String()
 		p2 := p.Get("name").String()
 		return c.bot.CQUploadPrivateFile(p0, p1, p2)
-}
+	}
 	return coolq.Failed(404, "API_NOT_FOUND", "API不存在")
 }

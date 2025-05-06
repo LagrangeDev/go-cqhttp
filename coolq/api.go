@@ -1414,6 +1414,7 @@ func (bot *CQBot) CQSetGroupPortrait(groupID int64, file, cache string) global.M
 // CQSetGroupReaction 扩展API-设置群消息表态
 //
 // @route(set_group_reaction)
+// @default(is_add=true)
 func (bot *CQBot) CQSetGroupReaction(messageID int32, emojiID string, isAdd bool) global.MSG {
 	msg, err := db.GetGroupMessageByGlobalID(messageID)
 	if err != nil {
