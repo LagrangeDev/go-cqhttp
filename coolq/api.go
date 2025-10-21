@@ -1141,11 +1141,12 @@ func (bot *CQBot) CQGetImage(file string) global.MSG {
 
 	if err == nil {
 		r := binary.NewReader(b)
-		r.ReadBytes(16)
+		r.SkipBytes(16)
 		msg := global.MSG{
 			"size":     r.ReadI32(),
 			"filename": r.ReadStringWithLength("u32", true),
 			"url":      r.ReadStringWithLength("u32", true),
+			"fileuuid": r.ReadStringWithLength("u32", true),
 		}
 		local := path.Join(global.CachePath, file+path.Ext(msg["filename"].(string)))
 		if !global.FileExists(local) {

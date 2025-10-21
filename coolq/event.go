@@ -533,9 +533,13 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			//		i.URL = u
 			//	}
 			//}
-			data := binary.NewBuilder().WriteBytes(i.Md5).
-				WritePacketString(i.FileUUID, "u32", true).
+			// 根据 https://github.com/Mrs4s/go-cqhttp/blob/a5923f179b360331786a6509eb33481e775a7bd1/coolq/event.go#L663-L669 修复
+			data := binary.NewBuilder().
+				WriteBytes(i.Md5).
+				WriteU32(i.Size).
 				WritePacketString(i.ImageID, "u32", true).
+				WritePacketString(i.URL, "u32", true).
+				WritePacketString(i.FileUUID, "u32", true).
 				ToBytes()
 			cache.Image.Insert(i.Md5, data)
 
