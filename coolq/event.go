@@ -533,11 +533,10 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 			//		i.URL = u
 			//	}
 			//}
-			data := binary.NewWriterF(func(w *binary.Builder) {
-				_, _ = w.Write(i.Md5)
-				w.WritePacketString(i.FileUUID, "u32", true)
-				w.WritePacketString(i.ImageID, "u32", true)
-			})
+			data := binary.NewBuilder().WriteBytes(i.Md5).
+				WritePacketString(i.FileUUID, "u32", true).
+				WritePacketString(i.ImageID, "u32", true).
+				ToBytes()
 			cache.Image.Insert(i.Md5, data)
 
 		case *message.VoiceElement:
@@ -552,14 +551,14 @@ func (bot *CQBot) checkMedia(e []message.IMessageElement, source message.Source)
 				}
 			}
 		case *message.ShortVideoElement:
-			data := binary.NewWriterF(func(w *binary.Builder) {
-				w.WriteBool(source.SourceType == message.SourceGroup)
-				w.WriteBytes(i.Md5)
-				w.WriteBytes(i.Sha1)
-				w.WritePacketString(i.Name, "u32", true)
-				w.WritePacketString(i.UUID, "u32", true)
-				w.WriteU32(uint32(source.PrimaryID))
-			})
+			data := binary.NewBuilder().
+				WriteBool(source.SourceType == message.SourceGroup).
+				WriteBytes(i.Md5).
+				WriteBytes(i.Sha1).
+				WritePacketString(i.Name, "u32", true).
+				WritePacketString(i.UUID, "u32", true).
+				WriteU32(uint32(source.PrimaryID)).
+				ToBytes()
 			filename := hex.EncodeToString(i.Md5) + ".video"
 			cache.Video.Insert(i.Md5, data)
 			if source.SourceType == message.SourceGroup {

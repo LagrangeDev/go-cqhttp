@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	"github.com/RomiChan/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
@@ -473,7 +473,7 @@ func (c *wsConn) handleRequest(_ *coolq.CQBot, payload []byte) {
 		}
 	}()
 
-	j := gjson.Parse(utils.B2S(payload))
+	j := gjson.Parse(lgrio.B2S(payload))
 	t := strings.TrimSuffix(j.Get("action").Str, "_async")
 	params := j.Get("params")
 	log.Debugf("WS接收到API调用: %v 参数: %v", t, params.Raw)

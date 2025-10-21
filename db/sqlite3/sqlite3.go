@@ -9,8 +9,8 @@ import (
 	"time"
 
 	sql "github.com/FloatTech/sqlite"
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -130,7 +130,7 @@ func (s *database) GetGroupMessageByGlobalID(id int32) (*db.StoredGroupMessage, 
 	ret.SubType = grpmsg.SubType
 	ret.GroupCode = grpmsg.GroupCode
 	ret.AnonymousID = grpmsg.AnonymousID
-	_ = yaml.Unmarshal(utils.S2B(grpmsg.Content), &ret)
+	_ = yaml.Unmarshal(lgrio.S2B(grpmsg.Content), &ret)
 	if grpmsg.AttributeID != 0 {
 		var attr StoredMessageAttribute
 		s.RLock()
@@ -162,7 +162,7 @@ func (s *database) GetGroupMessageByGlobalID(id int32) (*db.StoredGroupMessage, 
 				PrevID:       quoinf.PrevID,
 				PrevGlobalID: quoinf.PrevGlobalID,
 			}
-			_ = yaml.Unmarshal(utils.S2B(quoinf.QuotedContent), &ret.QuotedInfo)
+			_ = yaml.Unmarshal(lgrio.S2B(quoinf.QuotedContent), &ret.QuotedInfo)
 		}
 	}
 	return &ret, nil
@@ -182,7 +182,7 @@ func (s *database) GetPrivateMessageByGlobalID(id int32) (*db.StoredPrivateMessa
 	ret.SubType = privmsg.SubType
 	ret.SessionUin = privmsg.SessionUin
 	ret.TargetUin = privmsg.TargetUin
-	_ = yaml.Unmarshal(utils.S2B(privmsg.Content), &ret)
+	_ = yaml.Unmarshal(lgrio.S2B(privmsg.Content), &ret)
 	if privmsg.AttributeID != 0 {
 		var attr StoredMessageAttribute
 		s.RLock()
@@ -214,7 +214,7 @@ func (s *database) GetPrivateMessageByGlobalID(id int32) (*db.StoredPrivateMessa
 				PrevID:       quoinf.PrevID,
 				PrevGlobalID: quoinf.PrevGlobalID,
 			}
-			_ = yaml.Unmarshal(utils.S2B(quoinf.QuotedContent), &ret.QuotedInfo)
+			_ = yaml.Unmarshal(lgrio.S2B(quoinf.QuotedContent), &ret.QuotedInfo)
 		}
 	}
 	return &ret, nil
@@ -230,13 +230,13 @@ func (s *database) InsertGroupMessage(msg *db.StoredGroupMessage) error {
 	}
 	h := crc64.New(crc64.MakeTable(crc64.ISO))
 	if msg.Attribute != nil {
-		h.Write(binary.NewWriterF(func(w *binary.Builder) {
-			w.WriteU32(uint32(msg.Attribute.MessageSeq))
-			w.WriteU32(uint32(msg.Attribute.InternalID))
-			w.WriteU64(uint64(msg.Attribute.SenderUin))
-			w.WriteU64(uint64(msg.Attribute.Timestamp))
-		}))
-		h.Write(utils.S2B(msg.Attribute.SenderName))
+		h.Write(binary.NewBuilder().
+			WriteI32(msg.Attribute.MessageSeq).
+			WriteI32(msg.Attribute.InternalID).
+			WriteI64(msg.Attribute.SenderUin).
+			WriteI64(msg.Attribute.Timestamp).
+			ToBytes())
+		h.Write(lgrio.S2B(msg.Attribute.SenderName))
 		id := int64(h.Sum64())
 		if id == 0 {
 			id++
@@ -262,10 +262,8 @@ func (s *database) InsertGroupMessage(msg *db.StoredGroupMessage) error {
 		h.Reset()
 	}
 	if msg.QuotedInfo != nil {
-		h.Write(utils.S2B(msg.QuotedInfo.PrevID))
-		h.Write(binary.NewWriterF(func(w *binary.Builder) {
-			w.WriteU32(uint32(msg.QuotedInfo.PrevGlobalID))
-		}))
+		h.Write(lgrio.S2B(msg.QuotedInfo.PrevID))
+		h.Write(binary.NewBuilder().WriteI32(msg.QuotedInfo.PrevGlobalID).ToBytes())
 		content, err := yaml.Marshal(&msg.QuotedInfo)
 		if err != nil {
 			return errors.Wrap(err, "insert marshal QuotedContent error")
@@ -280,7 +278,7 @@ func (s *database) InsertGroupMessage(msg *db.StoredGroupMessage) error {
 			ID:            id,
 			PrevID:        msg.QuotedInfo.PrevID,
 			PrevGlobalID:  msg.QuotedInfo.PrevGlobalID,
-			QuotedContent: utils.B2S(content),
+			QuotedContent: lgrio.B2S(content),
 		})
 		s.Unlock()
 		if err == nil {
@@ -291,7 +289,7 @@ func (s *database) InsertGroupMessage(msg *db.StoredGroupMessage) error {
 	if err != nil {
 		return errors.Wrap(err, "insert marshal Content error")
 	}
-	grpmsg.Content = utils.B2S(content)
+	grpmsg.Content = lgrio.B2S(content)
 	s.Lock()
 	err = s.db.Insert(Sqlite3GroupMessageTableName, grpmsg)
 	s.Unlock()
@@ -311,13 +309,13 @@ func (s *database) InsertPrivateMessage(msg *db.StoredPrivateMessage) error {
 	}
 	h := crc64.New(crc64.MakeTable(crc64.ISO))
 	if msg.Attribute != nil {
-		h.Write(binary.NewWriterF(func(w *binary.Builder) {
-			w.WriteU32(uint32(msg.Attribute.MessageSeq))
-			w.WriteU32(uint32(msg.Attribute.InternalID))
-			w.WriteU64(uint64(msg.Attribute.SenderUin))
-			w.WriteU64(uint64(msg.Attribute.Timestamp))
-		}))
-		h.Write(utils.S2B(msg.Attribute.SenderName))
+		h.Write(binary.NewBuilder().
+			WriteI32(msg.Attribute.MessageSeq).
+			WriteI32(msg.Attribute.InternalID).
+			WriteI64(msg.Attribute.SenderUin).
+			WriteI64(msg.Attribute.Timestamp).
+			ToBytes())
+		h.Write(lgrio.S2B(msg.Attribute.SenderName))
 		id := int64(h.Sum64())
 		if id == 0 {
 			id++
@@ -343,10 +341,8 @@ func (s *database) InsertPrivateMessage(msg *db.StoredPrivateMessage) error {
 		h.Reset()
 	}
 	if msg.QuotedInfo != nil {
-		h.Write(utils.S2B(msg.QuotedInfo.PrevID))
-		h.Write(binary.NewWriterF(func(w *binary.Builder) {
-			w.WriteU32(uint32(msg.QuotedInfo.PrevGlobalID))
-		}))
+		h.Write(lgrio.S2B(msg.QuotedInfo.PrevID))
+		h.Write(binary.NewBuilder().WriteI32(msg.QuotedInfo.PrevGlobalID).ToBytes())
 		content, err := yaml.Marshal(&msg.QuotedInfo)
 		if err != nil {
 			return errors.Wrap(err, "insert marshal QuotedContent error")
@@ -361,7 +357,7 @@ func (s *database) InsertPrivateMessage(msg *db.StoredPrivateMessage) error {
 			ID:            id,
 			PrevID:        msg.QuotedInfo.PrevID,
 			PrevGlobalID:  msg.QuotedInfo.PrevGlobalID,
-			QuotedContent: utils.B2S(content),
+			QuotedContent: lgrio.B2S(content),
 		})
 		s.Unlock()
 		if err == nil {
@@ -372,7 +368,7 @@ func (s *database) InsertPrivateMessage(msg *db.StoredPrivateMessage) error {
 	if err != nil {
 		return errors.Wrap(err, "insert marshal Content error")
 	}
-	privmsg.Content = utils.B2S(content)
+	privmsg.Content = lgrio.B2S(content)
 	s.Lock()
 	err = s.db.Insert(Sqlite3PrivateMessageTableName, privmsg)
 	s.Unlock()

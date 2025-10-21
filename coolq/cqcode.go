@@ -17,9 +17,9 @@ import (
 
 	"github.com/LagrangeDev/LagrangeGo/client/packets/pb/service/oidb"
 	"github.com/LagrangeDev/LagrangeGo/message"
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
 	"github.com/LagrangeDev/LagrangeGo/utils/crypto"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	b14 "github.com/fumiama/go-base16384"
 	"github.com/segmentio/asm/base64"
 	log "github.com/sirupsen/logrus"
@@ -940,7 +940,7 @@ func (bot *CQBot) makeImageOrVideoElem(elem msg.Element, video bool, sourceType 
 		return &msg.LocalImage{Stream: bytes.NewReader(b), URL: f}, nil
 	}
 	if !video && strings.HasPrefix(f, "base16384") {
-		b, err := b14.UTF82UTF16BE(utils.S2B(strings.TrimPrefix(f, "base16384://")))
+		b, err := b14.UTF82UTF16BE(lgrio.S2B(strings.TrimPrefix(f, "base16384://")))
 		if err != nil {
 			return nil, err
 		}

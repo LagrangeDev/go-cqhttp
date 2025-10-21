@@ -19,8 +19,8 @@ import (
 	"github.com/LagrangeDev/LagrangeGo/client/entity"
 	"github.com/LagrangeDev/LagrangeGo/client/sign"
 	"github.com/LagrangeDev/LagrangeGo/message"
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	"github.com/LagrangeDev/LagrangeGo/utils/io"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 
@@ -272,7 +272,7 @@ func (bot *CQBot) CQUploadGroupFile(groupID int64, file, name, folder string) gl
 		log.Warnf("上传群文件 %v 失败: 文件不存在", file)
 		return Failed(100, "FILE_NOT_FOUND", "文件不存在")
 	}
-	if err := bot.Client.SendGroupFile(uint32(groupID), file, name, utils.Ternary(folder == "", "/", folder)); err != nil {
+	if err := bot.Client.SendGroupFile(uint32(groupID), file, name, io.Ternary(folder == "", "/", folder)); err != nil {
 		log.Warnf("上传群 %v 文件 %v 失败: %v", groupID, file, err)
 		return Failed(100, "FILE_SYSTEM_UPLOAD_API_ERROR", err.Error())
 	}
@@ -837,9 +837,9 @@ func (bot *CQBot) CQProcessGroupRequest(flag, subType, reason string, approve bo
 					return Failed(100, "FLAG_HAS_BEEN_CHECKED", "消息已被处理")
 				}
 				if approve {
-					_ = bot.Client.SetGroupRequest(req.IsFiltered, true, req.Sequence, uint32(req.EventType), req.GroupUin, "")
+					_ = bot.Client.SetGroupRequest(req.IsFiltered, entity.GroupRequestOperateAllow, req.Sequence, uint32(req.EventType), req.GroupUin, "")
 				} else {
-					_ = bot.Client.SetGroupRequest(req.IsFiltered, false, req.Sequence, uint32(req.EventType), req.GroupUin, reason)
+					_ = bot.Client.SetGroupRequest(req.IsFiltered, entity.GroupRequestOperateDeny, req.Sequence, uint32(req.EventType), req.GroupUin, reason)
 				}
 				return OK(nil)
 			}
@@ -852,9 +852,9 @@ func (bot *CQBot) CQProcessGroupRequest(flag, subType, reason string, approve bo
 					return Failed(100, "FLAG_HAS_BEEN_CHECKED", "消息已被处理")
 				}
 				if approve {
-					_ = bot.Client.SetGroupRequest(req.IsFiltered, true, req.Sequence, uint32(req.EventType), req.GroupUin, "")
+					_ = bot.Client.SetGroupRequest(req.IsFiltered, entity.GroupRequestOperateAllow, req.Sequence, uint32(req.EventType), req.GroupUin, "")
 				} else {
-					_ = bot.Client.SetGroupRequest(req.IsFiltered, false, req.Sequence, uint32(req.EventType), req.GroupUin, reason)
+					_ = bot.Client.SetGroupRequest(req.IsFiltered, entity.GroupRequestOperateDeny, req.Sequence, uint32(req.EventType), req.GroupUin, reason)
 				}
 				return OK(nil)
 			}
@@ -1057,7 +1057,7 @@ func (bot *CQBot) CQHandleQuickOperation(context, operation gjson.Result) global
 					},
 				})
 
-				err := json.Unmarshal(utils.S2B(reply.Raw), &replySegments)
+				err := json.Unmarshal(io.S2B(reply.Raw), &replySegments)
 				if err != nil {
 					log.WithError(err).Warnf("处理 at_sender 过程中发生错误")
 					return Failed(-1, "处理 at_sender 过程中发生错误", err.Error())
@@ -1071,7 +1071,7 @@ func (bot *CQBot) CQHandleQuickOperation(context, operation gjson.Result) global
 					return Failed(-1, "处理 at_sender 过程中发生错误", err.Error())
 				}
 
-				reply = gjson.Parse(utils.B2S(modified))
+				reply = gjson.Parse(io.B2S(modified))
 			} else if at && reply.Type == gjson.String {
 				reply = gjson.Parse(fmt.Sprintf(
 					"\"[CQ:at,qq=%d]%s\"",

@@ -17,8 +17,8 @@ import (
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/client/auth"
 	"github.com/LagrangeDev/LagrangeGo/client/packets/pb/action"
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/crypto"
+	"github.com/LagrangeDev/LagrangeGo/utils/io"
 	para "github.com/fumiama/go-hide-param"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	log "github.com/sirupsen/logrus"
@@ -377,7 +377,7 @@ func LoginInteract() {
 	if uint(base.Account.Status) >= 3000 {
 		base.Account.Status = 10
 	}
-	_ = cli.SetOnlineStatus(utils.Ternary(base.Account.Status >= 1000, action.SetStatus{
+	_ = cli.SetOnlineStatus(io.Ternary(base.Account.Status >= 1000, action.SetStatus{
 		Status:    10,
 		ExtStatus: uint32(base.Account.Status),
 	}, action.SetStatus{Status: uint32(base.Account.Status)}))
@@ -488,19 +488,19 @@ type protocolLogger struct{}
 
 const fromProtocol = "Protocol -> "
 
-func (p protocolLogger) Info(format string, arg ...any) {
+func (p protocolLogger) Infof(format string, arg ...any) {
 	log.Infof(fromProtocol+format, arg...)
 }
 
-func (p protocolLogger) Warning(format string, arg ...any) {
+func (p protocolLogger) Warningf(format string, arg ...any) {
 	log.Warnf(fromProtocol+format, arg...)
 }
 
-func (p protocolLogger) Debug(format string, arg ...any) {
+func (p protocolLogger) Debugf(format string, arg ...any) {
 	log.Debugf(fromProtocol+format, arg...)
 }
 
-func (p protocolLogger) Error(format string, arg ...any) {
+func (p protocolLogger) Errorf(format string, arg ...any) {
 	log.Errorf(fromProtocol+format, arg...)
 }
 

@@ -17,7 +17,7 @@ import (
 
 	"github.com/LagrangeDev/LagrangeGo/client/auth"
 	"github.com/LagrangeDev/LagrangeGo/client/sign"
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	"github.com/LagrangeDev/LagrangeGo/utils/io"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Mrs4s/go-cqhttp/internal/base"
@@ -113,7 +113,7 @@ func (c *signer) AddRequestHeader(header map[string]string) {
 func (c *signer) AddSignServer(signServers ...string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.instances = append(c.instances, utils.Map[string, *remote](signServers, func(s string) *remote {
+	c.instances = append(c.instances, io.Map(signServers, func(s string) *remote {
 		return &remote{server: s}
 	})...)
 }
@@ -122,7 +122,7 @@ func (c *signer) AddSignServer(signServers ...string) {
 func (c *signer) GetSignServer() []string {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	return utils.Map(c.instances, func(sign *remote) string {
+	return io.Map(c.instances, func(sign *remote) string {
 		return sign.server
 	})
 }

@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	b14 "github.com/fumiama/go-base16384"
 	"github.com/segmentio/asm/base64"
 	log "github.com/sirupsen/logrus"
@@ -63,7 +63,7 @@ func ReadAllText(path string) string {
 
 // WriteAllText 将给定text写入给定path
 func WriteAllText(path, text string) error {
-	return os.WriteFile(path, utils.S2B(text), 0o644)
+	return os.WriteFile(path, lgrio.S2B(text), 0o644)
 }
 
 // Check 检测err是否为nil
@@ -103,7 +103,7 @@ func FindFile(file, cache, p string) (data []byte, err error) {
 			return nil, err
 		}
 	case strings.HasPrefix(file, "base16384"):
-		data, err = b14.UTF82UTF16BE(utils.S2B(strings.TrimPrefix(file, "base16384://")))
+		data, err = b14.UTF82UTF16BE(lgrio.S2B(strings.TrimPrefix(file, "base16384://")))
 		if err != nil {
 			return nil, err
 		}

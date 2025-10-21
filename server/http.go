@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"
@@ -177,7 +177,7 @@ func (s *httpServer) ServeHTTP(writer http.ResponseWriter, request *http.Request
 				writer.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			ctx.json = gjson.Parse(utils.B2S(body))
+			ctx.json = gjson.Parse(lgrio.B2S(body))
 		}
 		if strings.Contains(contentType, "application/x-www-form-urlencoded") {
 			err := request.ParseForm()

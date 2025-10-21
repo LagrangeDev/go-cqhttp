@@ -14,7 +14,7 @@ import (
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/client/auth"
 	"github.com/LagrangeDev/LagrangeGo/client/packets/wtlogin/qrcodestate"
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	"github.com/LagrangeDev/LagrangeGo/utils/io"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -81,7 +81,7 @@ func printQRCode(imgData []byte) {
 	}
 
 	bound := img.Bounds().Max.X
-	buf := make([]byte, 0, (bound+1)*(bound/2+utils.Ternary(bound%2 == 0, 0, 1)))
+	buf := make([]byte, 0, (bound+1)*(bound/2+io.Ternary(bound%2 == 0, 0, 1)))
 
 	padding := 0
 	lastColor := img.At(padding, padding).(color.Gray).Y
@@ -94,7 +94,7 @@ func printQRCode(imgData []byte) {
 	for y := padding; y < bound-padding; y += 2 {
 		for x := padding; x < bound-padding; x++ {
 			isUpWhite := img.At(x, y).(color.Gray).Y == 255
-			isDownWhite := utils.Ternary(y < bound-padding, img.At(x, y+1).(color.Gray).Y == 255, false)
+			isDownWhite := io.Ternary(y < bound-padding, img.At(x, y+1).(color.Gray).Y == 255, false)
 
 			switch {
 			case !isUpWhite && !isDownWhite:
@@ -277,7 +277,7 @@ func getTicket(u string) (string, string) {
 	log.Warnf("2. 手动抓取提交")
 	log.Warn("请输入(1 - 2)：")
 	text := readLine()
-	id := utils.NewUUID()
+	id := io.NewUUID()
 	auto := !strings.Contains(text, "2")
 	// TODO 自动获取验证码
 	if auto {

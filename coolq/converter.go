@@ -73,44 +73,44 @@ func (bot *CQBot) formatGroupMessage(m *message.GroupMessage) *event {
 		},
 		"user_id": m.Sender.Uin,
 	}
-	if m.Sender.IsAnonymous() {
-		gm["anonymous"] = global.MSG{
-			"flag": m.Sender.AnonymousInfo.AnonymousID + "|" + m.Sender.AnonymousInfo.AnonymousNick,
-			"id":   m.Sender.Uin,
-			"name": m.Sender.AnonymousInfo.AnonymousNick,
+	// if m.Sender.IsAnonymous() {
+	// 	gm["anonymous"] = global.MSG{
+	// 		"flag": m.Sender.AnonymousInfo.AnonymousID + "|" + m.Sender.AnonymousInfo.AnonymousNick,
+	// 		"id":   m.Sender.Uin,
+	// 		"name": m.Sender.AnonymousInfo.AnonymousNick,
+	// 	}
+	// 	gm["sender"].(global.MSG)["nickname"] = "匿名消息"
+	// 	typ = "message/group/anonymous"
+	// } else {
+	mem := bot.Client.GetCachedMemberInfo(m.Sender.Uin, m.GroupUin)
+	if mem == nil {
+		log.Warnf("获取 %v 成员信息失败，尝试刷新成员列表", m.Sender.Uin)
+		err := bot.Client.RefreshGroupMembersCache(m.GroupUin)
+		if err != nil {
+			log.Warnf("刷新群 %v 成员列表失败: %v", m.GroupUin, err)
+			return nil
 		}
-		gm["sender"].(global.MSG)["nickname"] = "匿名消息"
-		typ = "message/group/anonymous"
-	} else {
-		mem := bot.Client.GetCachedMemberInfo(m.Sender.Uin, m.GroupUin)
+		mem = bot.Client.GetCachedMemberInfo(m.Sender.Uin, m.GroupUin)
 		if mem == nil {
-			log.Warnf("获取 %v 成员信息失败，尝试刷新成员列表", m.Sender.Uin)
-			err := bot.Client.RefreshGroupMembersCache(m.GroupUin)
-			if err != nil {
-				log.Warnf("刷新群 %v 成员列表失败: %v", m.GroupUin, err)
-				return nil
-			}
-			mem = bot.Client.GetCachedMemberInfo(m.Sender.Uin, m.GroupUin)
-			if mem == nil {
-				return nil
-			}
+			return nil
 		}
-		ms := gm["sender"].(global.MSG)
-		role := "member"
-		switch mem.Permission { // nolint:exhaustive
-		case entity.Owner:
-			role = "owner"
-		case entity.Admin:
-			role = "admin"
-		case entity.Member:
-			role = "member"
-		}
-		ms["role"] = role
-		ms["nickname"] = m.Sender.Nickname
-		ms["card"] = m.Sender.CardName
-		// TODO 获取专属头衔
-		ms["title"] = ""
 	}
+	ms := gm["sender"].(global.MSG)
+	role := "member"
+	switch mem.Permission { // nolint:exhaustive
+	case entity.Owner:
+		role = "owner"
+	case entity.Admin:
+		role = "admin"
+	case entity.Member:
+		role = "member"
+	}
+	ms["role"] = role
+	ms["nickname"] = m.Sender.Nickname
+	ms["card"] = m.Sender.CardName
+	// TODO 获取专属头衔
+	ms["title"] = ""
+	// }
 	ev := bot.event(typ, gm)
 	ev.Time = int64(m.Time)
 	return ev

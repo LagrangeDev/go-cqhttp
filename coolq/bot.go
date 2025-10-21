@@ -17,8 +17,8 @@ import (
 	event2 "github.com/LagrangeDev/LagrangeGo/client/event"
 	"github.com/LagrangeDev/LagrangeGo/client/sign"
 	"github.com/LagrangeDev/LagrangeGo/message"
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	"github.com/LagrangeDev/LagrangeGo/utils/io"
 	"github.com/RomiChan/syncx"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -67,7 +67,7 @@ func (e *Event) JSONBytes() []byte {
 // by lazy marshalling.
 func (e *Event) JSONString() string {
 	e.once.Do(e.marshal)
-	return utils.B2S(e.buffer.Bytes())
+	return io.B2S(e.buffer.Bytes())
 }
 
 // NewQQBot 初始化一个QQBot实例
@@ -426,12 +426,12 @@ func (bot *CQBot) InsertGroupMessage(m *message.GroupMessage, source message.Sou
 			Timestamp:  int64(m.Time),
 		},
 		GroupCode: int64(m.GroupUin),
-		AnonymousID: func() string {
-			if m.Sender.IsAnonymous() {
-				return m.Sender.AnonymousInfo.AnonymousID
-			}
-			return ""
-		}(),
+		// AnonymousID: func() string {
+		// 	if m.Sender.IsAnonymous() {
+		// 		return m.Sender.AnonymousInfo.AnonymousID
+		// 	}
+		// 	return ""
+		// }(),
 		Content: ToMessageContent(m.Elements, source),
 	}
 	if replyElem != nil {
@@ -557,8 +557,5 @@ func formatMemberName(mem *entity.GroupMember) string {
 
 // encodeMessageID 临时先这样, 暂时用不上
 func encodeMessageID(target int64, seq int32) string {
-	return hex.EncodeToString(binary.NewWriterF(func(w *binary.Builder) {
-		w.WriteU64(uint64(target))
-		w.WriteU32(uint32(seq))
-	}))
+	return hex.EncodeToString(binary.NewBuilder().WriteU64(uint64(target)).WriteU32(uint32(seq)).ToBytes())
 }

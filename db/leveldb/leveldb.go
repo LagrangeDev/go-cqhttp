@@ -3,8 +3,8 @@ package leveldb
 import (
 	"path"
 
-	"github.com/LagrangeDev/LagrangeGo/utils"
 	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	"github.com/pkg/errors"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -46,7 +46,7 @@ func (ldb *database) Open() error {
 }
 
 func (ldb *database) GetMessageByGlobalID(id int32) (_ db.StoredMessage, err error) {
-	v, err := ldb.db.Get(binary.ToBytes(id), nil)
+	v, err := ldb.db.Get(binary.NewBuilder().WriteI32(id).ToBytes(), nil)
 	if err != nil || len(v) == 0 {
 		return nil, errors.Wrap(err, "get value error")
 	}
@@ -55,7 +55,7 @@ func (ldb *database) GetMessageByGlobalID(id int32) (_ db.StoredMessage, err err
 			err = errors.Errorf("%v", r)
 		}
 	}()
-	r, err := newReader(utils.B2S(v))
+	r, err := newReader(lgrio.B2S(v))
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (ldb *database) InsertGroupMessage(msg *db.StoredGroupMessage) error {
 	w := newWriter()
 	w.uvarint(group)
 	w.writeStoredGroupMessage(msg)
-	err := ldb.db.Put(binary.ToBytes(msg.GlobalID), w.bytes(), nil)
+	err := ldb.db.Put(binary.NewBuilder().WriteI32(msg.GlobalID).ToBytes(), w.bytes(), nil)
 	return errors.Wrap(err, "put data error")
 }
 
@@ -105,6 +105,6 @@ func (ldb *database) InsertPrivateMessage(msg *db.StoredPrivateMessage) error {
 	w := newWriter()
 	w.uvarint(private)
 	w.writeStoredPrivateMessage(msg)
-	err := ldb.db.Put(binary.ToBytes(msg.GlobalID), w.bytes(), nil)
+	err := ldb.db.Put(binary.NewBuilder().WriteI32(msg.GlobalID).ToBytes(), w.bytes(), nil)
 	return errors.Wrap(err, "put data error")
 }

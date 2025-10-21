@@ -4,8 +4,6 @@ package msg
 import (
 	"strings"
 	"unicode/utf8"
-
-	"github.com/LagrangeDev/LagrangeGo/utils/binary"
 )
 
 // @@@ CQ码转义处理 @@@
@@ -135,24 +133,22 @@ func (e *Element) WriteCQCodeTo(sb *strings.Builder) {
 
 // MarshalJSON see encoding/json.Marshaler
 func (e *Element) MarshalJSON() ([]byte, error) {
-	return binary.NewWriterF(func(w *binary.Builder) {
-		buf := w.Buffer()
-		// fmt.Fprintf(buf, `{"type":"%s","data":{`, e.Type)
-		buf.WriteString(`{"type":"`)
-		buf.WriteString(e.Type)
-		buf.WriteString(`","data":{`)
-		for i, data := range e.Data {
-			if i != 0 {
-				buf.WriteByte(',')
-			}
-			// fmt.Fprintf(buf, `"%s":%q`, data.K, data.V)
-			buf.WriteByte('"')
-			buf.WriteString(data.K)
-			buf.WriteString(`":`)
-			buf.WriteString(QuoteJSON(data.V))
+	var builder strings.Builder
+	builder.WriteString(`{"type":"`)
+	builder.WriteString(e.Type)
+	builder.WriteString(`","data":{`)
+	for i, data := range e.Data {
+		if i != 0 {
+			builder.WriteString(",")
 		}
-		buf.WriteString(`}}`)
-	}), nil
+		// fmt.Fprintf(buf, `"%s":%q`, data.K, data.V)
+		builder.WriteString(`"`)
+		builder.WriteString(data.K)
+		builder.WriteString(`":`)
+		builder.WriteString(QuoteJSON(data.V))
+	}
+	builder.WriteString("}}")
+	return []byte(builder.String()), nil
 }
 
 const hex = "0123456789abcdef"

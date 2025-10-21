@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/LagrangeDev/LagrangeGo/utils"
+	lgrio "github.com/LagrangeDev/LagrangeGo/utils/io"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -53,7 +53,7 @@ func (l *lambdaResponseWriter) Header() http.Header {
 func (l *lambdaResponseWriter) flush() error {
 	buffer := global.NewBuffer()
 	defer global.PutBuffer(buffer)
-	body := utils.B2S(l.buf.Bytes())
+	body := lgrio.B2S(l.buf.Bytes())
 	header := make(map[string]string, len(l.header))
 	for k, v := range l.header {
 		header[k] = v[0]
