@@ -385,8 +385,8 @@ func (bot *CQBot) memberJoinEvent(c *client.QQClient, e *event2.GroupMemberIncre
 }
 
 func (bot *CQBot) memberLeaveEvent(c *client.QQClient, e *event2.GroupMemberDecrease) {
-	member := c.GetCachedMemberInfo(c.GetUin(e.UserUID), e.GroupUin)
-	op := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID), e.GroupUin)
+	member := c.GetCachedMemberInfo(c.GetUin(e.UserUID, e.GroupUin), e.GroupUin)
+	op := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID, e.GroupUin), e.GroupUin)
 	group := c.GetCachedGroupInfo(e.GroupUin)
 	if e.IsKicked() {
 		log.Infof("成员 %v 被 %v T出了群 %v.", formatMemberName(member), formatMemberName(op), formatGroupName(group))
