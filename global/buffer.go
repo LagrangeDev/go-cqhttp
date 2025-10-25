@@ -2,18 +2,23 @@ package global
 
 import (
 	"bytes"
-	"sync"
+
+	"github.com/LagrangeDev/LagrangeGo/utils/binary"
+	"github.com/RomiChan/syncx"
 )
 
-var bufferPool = sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
+var bufferTable syncx.Map[*bytes.Buffer, *binary.Builder]
 
 // NewBuffer 从池中获取新 bytes.Buffer
 func NewBuffer() *bytes.Buffer {
-	return bufferPool.Get().(*bytes.Buffer)
+	builder := binary.NewBuilder()
+	bufferTable.Store(builder.Buffer(), builder)
+	return builder.Buffer()
 }
 
 // PutBuffer 将 Buffer放入池中
 func PutBuffer(buf *bytes.Buffer) {
-	buf.Reset()
-	bufferPool.Put(buf)
+	if v, ok := bufferTable.LoadAndDelete(buf); ok {
+		binary.PutBuilder(v)
+	}
 }
