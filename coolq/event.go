@@ -349,12 +349,15 @@ func (bot *CQBot) joinGroupEvent(c *client.QQClient, event *event2.GroupMemberIn
 }
 
 func (bot *CQBot) leaveGroupEvent(c *client.QQClient, e *event2.GroupMemberDecrease) {
+	group := c.GetCachedGroupInfo(e.GroupUin)
+	var op *entity.GroupMember
 	if e.IsKicked() {
-		log.Infof("Bot被 %v T出了群 %v.", formatMemberName(c.GetCachedMemberInfo(e.OperatorUin, e.GroupUin)), formatGroupName(c.GetCachedGroupInfo(e.GroupUin)))
+		op = c.GetCachedMemberInfo(e.OperatorUin, e.GroupUin)
+		log.Infof("Bot 被 %v 踢出了群 %v.", formatMemberName(op), formatGroupName(group))
 	} else {
-		log.Infof("Bot退出了群 %v.", formatGroupName(c.GetCachedGroupInfo(e.GroupUin)))
+		log.Infof("Bot 退出了群 %v.", formatGroupName(group))
 	}
-	bot.dispatch(bot.groupDecrease(int64(e.GroupUin), int64(c.Uin), c.GetCachedMemberInfo(e.OperatorUin, e.GroupUin)))
+	bot.dispatch(bot.groupDecrease(int64(e.GroupUin), int64(c.Uin), op))
 }
 
 func (bot *CQBot) memberPermissionChangedEvent(_ *client.QQClient, e *event2.GroupMemberPermissionChanged) {
@@ -385,15 +388,16 @@ func (bot *CQBot) memberJoinEvent(c *client.QQClient, e *event2.GroupMemberIncre
 }
 
 func (bot *CQBot) memberLeaveEvent(c *client.QQClient, e *event2.GroupMemberDecrease) {
-	member := c.GetCachedMemberInfo(c.GetUin(e.UserUID, e.GroupUin), e.GroupUin)
-	op := c.GetCachedMemberInfo(c.GetUin(e.OperatorUID, e.GroupUin), e.GroupUin)
+	member := c.GetCachedMemberInfo(e.UserUin, e.GroupUin)
+	var op *entity.GroupMember
 	group := c.GetCachedGroupInfo(e.GroupUin)
 	if e.IsKicked() {
-		log.Infof("成员 %v 被 %v T出了群 %v.", formatMemberName(member), formatMemberName(op), formatGroupName(group))
+		op = c.GetCachedMemberInfo(e.OperatorUin, e.GroupUin)
+		log.Infof("成员 %v 被 %v 踢出了群 %v.", formatMemberName(member), formatMemberName(op), formatGroupName(group))
 	} else {
 		log.Infof("成员 %v 离开了群 %v.", formatMemberName(member), formatGroupName(group))
 	}
-	bot.dispatch(bot.groupDecrease(int64(e.GroupUin), int64(member.Uin), op))
+	bot.dispatch(bot.groupDecrease(int64(e.GroupUin), int64(e.UserUin), op))
 }
 
 func (bot *CQBot) friendRequestEvent(_ *client.QQClient, e *event2.NewFriendRequest) {
@@ -502,11 +506,9 @@ func (bot *CQBot) groupIncrease(groupCode, operatorUin, userUin int64) *event {
 
 func (bot *CQBot) groupDecrease(groupCode, userUin int64, operator *entity.GroupMember) *event {
 	op := userUin
-	if operator != nil {
-		op = int64(operator.Uin)
-	}
 	subtype := "leave"
 	if operator != nil {
+		op = int64(operator.Uin)
 		if userUin == int64(bot.Client.Uin) {
 			subtype = "kick_me"
 		} else {
