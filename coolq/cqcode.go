@@ -222,7 +222,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		//		},
 		//	}
 		// TODO ServiceElement
-		//case *message.ServiceElement:
+		// case *message.ServiceElement:
 		//	m = msg.Element{
 		//		Type: "xml",
 		//		Data: pairs{
@@ -366,7 +366,7 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 		//	m = global.MSG{"type": "rps", "data": global.MSG{"value": o.Value}}
 		// case *message.MarketFaceElement:
 		//	m = global.MSG{"type": "text", "data": global.MSG{"text": o.Name}}
-		//case *message.ServiceElement:
+		// case *message.ServiceElement:
 		//	if isOk := strings.Contains(o.Content, "<?xml"); isOk {
 		//		m = global.MSG{
 		//			"type": "xml",
@@ -773,7 +773,7 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 	//		return nil, errors.New("invalid dice value " + value)
 	//	}
 	//	return message.NewDice(int32(i)), nil
-	//case "rps":
+	// case "rps":
 	//	value := elem.Get("value")
 	//	i, _ := strconv.ParseInt(value, 10, 64)
 	//	if i < 0 || i > 2 {
