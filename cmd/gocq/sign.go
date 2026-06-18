@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/modules/config"
 )
 
 const serverLatencyDown = math.MaxUint32
@@ -39,6 +40,7 @@ type (
 
 	remote struct {
 		server  string
+		token   string
 		latency atomic.Uint32
 	}
 )
@@ -50,19 +52,7 @@ func newSigner() *signer {
 	}
 }
 
-func (c *signer) init() {
-	go func() {
-		c.check()
-		ticker := time.NewTicker(30 * time.Minute)
-		defer ticker.Stop()
-		select {
-		case <-c.doneChan:
-			return
-		case <-ticker.C:
-			c.check()
-		}
-	}()
-}
+func (c *signer) init() {}
 
 // Release 释放资源
 func (c *signer) Release() {
@@ -70,7 +60,10 @@ func (c *signer) Release() {
 }
 
 // Sign 对数据包签名
-func (c *signer) Sign(cmd string, seq uint32, data []byte) (*sign.Response, error) {
+func (c *signer) Sign(cmd string, seq uint32, data []byte, uin uint32, guid, qua string) (*sign.Response, error) {
+	if !sign.ContainSignPKG(cmd) {
+		return nil, nil
+	}
 	sortFlag := false
 	defer func() {
 		if sortFlag {
@@ -81,7 +74,7 @@ func (c *signer) Sign(cmd string, seq uint32, data []byte) (*sign.Response, erro
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	for _, instance := range c.instances {
-		resp, err := instance.sign(cmd, seq, data, c.extraHeaders)
+		resp, err := instance.sign(cmd, seq, data, uin, guid, qua, c.extraHeaders)
 		if err == nil {
 			return resp, nil
 		}
@@ -110,12 +103,16 @@ func (c *signer) AddRequestHeader(header map[string]string) {
 }
 
 // AddSignServer 添加签名服务器
-func (c *signer) AddSignServer(signServers ...string) {
+func (c *signer) AddSignServer(signServers ...config.SignServer) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.instances = append(c.instances, io.Map(signServers, func(s string) *remote {
-		return &remote{server: s}
-	})...)
+	for _, s := range signServers {
+		u, err := url.Parse(s.URL)
+		if err != nil || u.Hostname() == "" {
+			continue
+		}
+		c.instances = append(c.instances, &remote{server: u.String(), token: s.Token})
+	}
 }
 
 // GetSignServer 获取签名服务器
@@ -136,37 +133,40 @@ func (c *signer) SetAppInfo(app *auth.AppInfo) {
 		app.CurrentVersion, runtime.GOOS, runtime.GOARCH, base.Version))
 }
 
-func (c *signer) check() {
-	log.Infoln("开始签名服务器质量测试")
-	availableQuantity := 0
-	wg := sync.WaitGroup{}
-	c.lock.RLock()
-	for _, instance := range c.instances {
-		wg.Add(1)
-		go func(i *remote) {
-			defer wg.Done()
-			i.test()
-		}(instance)
-	}
-	wg.Wait()
-	for _, instance := range c.instances {
-		if instance.latency.Load() < serverLatencyDown {
-			availableQuantity++
-		}
-	}
-	c.lock.RUnlock()
-	c.sortByLatency()
-	log.Infof("签名服务器质量测试完成，可用服务器数量: %d", availableQuantity)
-}
+//func (c *signer) check() {
+//	log.Infoln("开始签名服务器质量测试")
+//	availableQuantity := 0
+//	wg := sync.WaitGroup{}
+//	c.lock.RLock()
+//	for _, instance := range c.instances {
+//		wg.Add(1)
+//		go func(i *remote) {
+//			defer wg.Done()
+//			i.test()
+//		}(instance)
+//	}
+//	wg.Wait()
+//	for _, instance := range c.instances {
+//		if instance.latency.Load() < serverLatencyDown {
+//			availableQuantity++
+//		}
+//	}
+//	c.lock.RUnlock()
+//	c.sortByLatency()
+//	log.Infof("签名服务器质量测试完成，可用服务器数量: %d", availableQuantity)
+//}
 
-func (i *remote) sign(cmd string, seq uint32, buf []byte, header http.Header) (signResp *sign.Response, err error) {
-	if !(sign.ContainSignPKG(cmd) || cmd == "wtlogin.trans_emp") {
+func (i *remote) sign(cmd string, seq uint32, buf []byte, uin uint32, guid, qua string, header http.Header) (signResp *sign.Response, err error) {
+	if !sign.ContainSignPKG(cmd) {
 		return nil, nil
 	}
 	signReq := sign.Request{
-		Cmd: cmd,
-		Seq: int(seq),
-		Src: buf,
+		Command: cmd,
+		Seq:     int(seq),
+		Body:    buf,
+		Uin:     uin,
+		GUID:    guid,
+		Qua:     qua,
 	}
 	u, err := url.Parse(i.server)
 	if err != nil {
@@ -190,6 +190,9 @@ func (i *remote) sign(cmd string, seq uint32, buf []byte, header http.Header) (s
 			req.Header.Add(k, v)
 		}
 	}
+	if i.token != "" {
+		req.Header.Set("Authorization", "Bearer "+i.token)
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -201,26 +204,29 @@ func (i *remote) sign(cmd string, seq uint32, buf []byte, header http.Header) (s
 	if err != nil {
 		return nil, err
 	}
+	if signResp.Code != 0 {
+		return nil, errors.New(signResp.Message)
+	}
 
 	return signResp, nil
 }
 
-func (i *remote) test() {
-	startTime := time.Now().UnixMilli()
-	resp, err := i.sign("wtlogin.login", 1, []byte{11, 45, 14}, nil)
-	if err != nil || len(resp.Value.Sign) == 0 {
-		log.Warnf("测试签名服务器：%s时出现错误: %v", i.server, err)
-		i.latency.Store(serverLatencyDown)
-		return
-	}
-	// 有长连接的情况，取两次平均值
-	resp, err = i.sign("wtlogin.login", 1, []byte{11, 45, 14}, nil)
-	if err != nil || len(resp.Value.Sign) == 0 {
-		log.Warnf("测试签名服务器：%s时出现错误: %v", i.server, err)
-		i.latency.Store(serverLatencyDown)
-		return
-	}
-	latency := (time.Now().UnixMilli() - startTime) / 2
-	i.latency.Store(uint32(latency))
-	log.Debugf("签名服务器：%s，延迟：%dms", i.server, latency)
-}
+//func (i *remote) test() {
+//	startTime := time.Now().UnixMilli()
+//	resp, err := i.sign("wtlogin.login", 1, []byte{11, 45, 14}, 0, "", "", nil)
+//	if err != nil || len(resp.Value.SecSign) == 0 {
+//		log.Warnf("测试签名服务器：%s时出现错误: %v", i.server, err)
+//		i.latency.Store(serverLatencyDown)
+//		return
+//	}
+//	// 有长连接的情况，取两次平均值
+//	resp, err = i.sign("wtlogin.login", 1, []byte{11, 45, 14}, 0, "", "", nil)
+//	if err != nil || len(resp.Value.SecSign) == 0 {
+//		log.Warnf("测试签名服务器：%s时出现错误: %v", i.server, err)
+//		i.latency.Store(serverLatencyDown)
+//		return
+//	}
+//	latency := (time.Now().UnixMilli() - startTime) / 2
+//	i.latency.Store(uint32(latency))
+//	log.Debugf("签名服务器：%s，延迟：%dms", i.server, latency)
+//}

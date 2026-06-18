@@ -43,7 +43,8 @@ type Account struct {
 
 // SignServer 签名服务器
 type SignServer struct {
-	URL string `yaml:"url"`
+	URL   string `yaml:"url"`
+	Token string `yaml:"token"`
 }
 
 // Config 总配置文件

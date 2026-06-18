@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"sync"
@@ -212,7 +211,7 @@ func LoginInteract() {
 		time.Sleep(time.Second * 5)
 	}
 	log.Info("开始尝试登录并同步消息...")
-	app := auth.AppList["linux"]["3.2.15-30366"]
+	app := auth.AppList["linux"]["3.2.26-46494"]
 	log.Infof("使用协议: %s", app.CurrentVersion)
 	cli = newClient(app)
 	cli.UseDevice(device)
@@ -431,19 +430,15 @@ func PasswordHashDecrypt(encryptedPasswordHash string, key []byte) ([]byte, erro
 }
 
 func newClient(app *auth.AppInfo) *client.QQClient {
-	signUrls := make([]string, 0, len(base.SignServers))
-	for _, s := range base.SignServers {
-		u, err := url.Parse(s.URL)
-		if err != nil || u.Hostname() == "" {
-			continue
-		}
-		signUrls = append(signUrls, u.String())
+	var uin uint32
+	if base.Account != nil && base.Account.Uin > 0 {
+		uin = uint32(base.Account.Uin)
 	}
-	c := client.NewClientEmpty()
+	c := client.NewClientMD5(uin, [16]byte{})
 	c.UseVersion(app)
 	signer := newSigner()
 	c.UseSignProvider(signer)
-	c.AddSignServer(signUrls...)
+	signer.AddSignServer(base.SignServers...)
 	signer.init()
 	// TODO 服务器更新通知
 	// c.OnServerUpdated(func(bot *client.QQClient, e *client.ServerUpdatedEvent) bool {

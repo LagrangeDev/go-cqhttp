@@ -1,7 +1,7 @@
 # go-cqhttp 默认配置文件
 
 account: # 账号相关
-  uin: 1233456 # QQ账号
+  uin: 1233456 # QQ账号 扫码也需要填
   password: '' # 密码为空时使用扫码登录
   encrypt: false  # 是否开启密码加密
   status: 0      # 在线状态 请参考 https://docs.go-cqhttp.org/guide/config.html#在线状态
@@ -24,10 +24,12 @@ account: # 账号相关
   #   - url: 'https://signserver.example.com' # 线上签名服务器
   #   ...
   #
-  # 服务器不提供自建
+  # 参考 https://github.com/LagrangeDev/SignApiGuide
   sign-servers:
-    - url: 'https://sign.lagrangecore.org/api/sign/30366'  # 主签名服务器地址， 必填
+    - url: 'https://sign.lagrangecore.org/api/sign/sec-sign'  # 主签名服务器地址， 必填
+      token: ''
     - url: '-'  # 备用
+      token: ''
 
   # 连续寻找可用签名服务器最大尝试次数
   # 为 0 时会在连续 3 次没有找到可用签名服务器后保持使用主签名服务器，不再尝试进行切换备用
