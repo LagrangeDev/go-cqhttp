@@ -46,7 +46,7 @@ func ParseString(raw string) (r []Element) {
 	var elem Element
 	for raw != "" {
 		i := 0
-		for i < len(raw) && !(raw[i] == '[' && i+4 < len(raw) && raw[i:i+4] == "[CQ:") {
+		for i < len(raw) && (raw[i] != '[' || i+4 >= len(raw) || raw[i:i+4] != "[CQ:") {
 			i++
 		}
 		if i > 0 {

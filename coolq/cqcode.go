@@ -234,7 +234,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		//		m.Type = "json"
 		//	}
 		// TODO AnimatedSticker
-		//case *message.AnimatedSticker:
+		// case *message.AnimatedSticker:
 		//	m = msg.Element{
 		//		Type: "face",
 		//		Data: pairs{
@@ -243,7 +243,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		//		},
 		//	}
 		// TODO GroupFileElement
-		//case *message.GroupFileElement:
+		// case *message.GroupFileElement:
 		//	m = msg.Element{
 		//		Type: "file",
 		//		Data: pairs{
@@ -378,12 +378,12 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 		//			"data": global.MSG{"data": o.Content, "resid": o.Id},
 		//		}
 		//	}
-		//case *message.AnimatedSticker:
+		// case *message.AnimatedSticker:
 		//	m = global.MSG{
 		//		"type": "face",
 		//		"data": global.MSG{"id": o.ID, "type": "sticker"},
 		//	}
-		//case *message.GroupFileElement:
+		// case *message.GroupFileElement:
 		//	m = global.MSG{
 		//		"type": "file",
 		//		"data": global.MSG{"path": o.Path, "name": o.Name, "size": strconv.FormatInt(o.Size, 10), "busid": strconv.FormatInt(int64(o.Busid), 10)},
@@ -780,13 +780,13 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 	//		return nil, errors.New("invalid finger-guessing value " + value)
 	//	}
 	//	return message.NewFingerGuessing(int32(i)), nil
-	//case "xml":
+	// case "xml":
 	//	resID := elem.Get("resid")
 	//	template := elem.Get("data")
 	//	i, _ := strconv.ParseInt(resID, 10, 64)
 	//	m := message.NewRichXml(template, i)
 	//	return m, nil
-	//case "json":
+	// case "json":
 	//	resID := elem.Get("resid")
 	//	data := elem.Get("data")
 	//	i, _ := strconv.ParseInt(resID, 10, 64)
@@ -850,7 +850,7 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 			_, _ = video.Seek(0, io.SeekStart)
 			hash, _ := crypto.ComputeMd5AndLength(video)
 			cacheFile := path.Join(global.CachePath, hex.EncodeToString(hash)+".mp4")
-			if !(elem.Get("cache") == "" || elem.Get("cache") == "1") || !global.FileExists(cacheFile) {
+			if (elem.Get("cache") != "" && elem.Get("cache") != "1") || !global.FileExists(cacheFile) {
 				err = global.EncodeMP4(v.File, cacheFile)
 				if err != nil {
 					return nil, err
