@@ -146,7 +146,7 @@ func newNeqOp(argument gjson.Result) Filter {
 
 // Eval 对payload执行NotEqual过滤
 func (op *neqOperator) Eval(payload gjson.Result) bool {
-	return !(payload.String() == op.operand)
+	return payload.String() != op.operand
 }
 
 // inOperator 定义了过滤器中In操作符

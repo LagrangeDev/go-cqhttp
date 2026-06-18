@@ -1,41 +1,20 @@
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - fmt:.*
-      - io/ioutil:^Read.*
-
-  goimports:
-    local-prefixes: github.com/Mrs4s/go-cqhttp
-
-  gocritic:
-    disabled-checks:
-      - exitAfterDefer
-
-  forbidigo:
-    # Forbid the following identifiers
-    forbid:
-      - ^fmt\.Errorf$ # consider errors.Errorf in github.com/pkg/errors
+version: "2"
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
-  fast: false
+  # please, do not use `default: all`: inverted configuration with all linters
+  # and disabled linters is not scalable during updates of golangci-lint.
+  default: none
   enable:
     - bodyclose
     - durationcheck
-    - gofmt
-    - goimports
     - errcheck
     - exhaustive
     - bidichk
     - gocritic
-    - gosimple
     - govet
     - ineffassign
     #- nolintlint
     - staticcheck
-    - stylecheck
     - unconvert
     - usestdlibvars
     - unparam
@@ -47,9 +26,46 @@ linters:
     - revive
     - forbidigo
     - makezero
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt:.*
+        - io/ioutil:^Read.*
+
+    gocritic:
+      disabled-checks:
+        - exitAfterDefer
+
+    forbidigo:
+      # Forbid the following identifiers
+      forbid:
+        - pattern: ^fmt\.Errorf$ # consider errors.Errorf in github.com/pkg/errors
+  exclusions:
+    generated: lax
+    rules:
+      - path: (.+)\.go$
+        text: "Error return value of .((os.)?std(out|err)..*|.*Close|.*Seek|.*Flush|os.Remove(All)?|.*print(f|ln)?|os.(Un)?Setenv). is not check"
+    paths:
+      - db
+      - cmd/api-generator
+      - internal/encryption
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/Mrs4s/go-cqhttp
+  exclusions:
+    paths:
+      - db
+      - cmd/api-generator
+      - internal/encryption
 
 run:
-  # default concurrency is a available CPU number.
+  # default concurrency is an available CPU number.
   # concurrency: 4 # explicitly omit this value to fully utilize available resources.
   timeout: 5m
   issues-exit-code: 1
@@ -58,18 +74,12 @@ run:
 # output configuration options
 output:
   formats:
-    - format: colored-line-number
+    text:
       path: stdout
-  print-issued-lines: true
-  print-linter-name: true
+      print-issued-lines: true
+      print-linter-name: true
+      colors: true
 
 issues:
   # Fix found issues (if it's supported by the linter)
   fix: true
-  exclude-use-default: false
-  exclude:
-    - "Error return value of .((os.)?std(out|err)..*|.*Close|.*Seek|.*Flush|os.Remove(All)?|.*print(f|ln)?|os.(Un)?Setenv). is not check"
-  exclude-dirs:
-    - db
-    - cmd/api-generator
-    - internal/encryption

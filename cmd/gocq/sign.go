@@ -133,7 +133,7 @@ func (c *signer) SetAppInfo(app *auth.AppInfo) {
 		app.CurrentVersion, runtime.GOOS, runtime.GOARCH, base.Version))
 }
 
-//func (c *signer) check() {
+// func (c *signer) check() {
 //	log.Infoln("开始签名服务器质量测试")
 //	availableQuantity := 0
 //	wg := sync.WaitGroup{}
@@ -211,7 +211,7 @@ func (i *remote) sign(cmd string, seq uint32, buf []byte, uin uint32, guid, qua 
 	return signResp, nil
 }
 
-//func (i *remote) test() {
+// func (i *remote) test() {
 //	startTime := time.Now().UnixMilli()
 //	resp, err := i.sign("wtlogin.login", 1, []byte{11, 45, 14}, 0, "", "", nil)
 //	if err != nil || len(resp.Value.SecSign) == 0 {
