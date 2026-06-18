@@ -243,7 +243,7 @@ func toElements(e []message.IMessageElement, source message.Source) (r []msg.Ele
 		//		},
 		//	}
 		// TODO GroupFileElement
-		//case *message.GroupFileElement:
+		// case *message.GroupFileElement:
 		//	m = msg.Element{
 		//		Type: "file",
 		//		Data: pairs{
@@ -383,7 +383,7 @@ func ToMessageContent(e []message.IMessageElement, source message.Source) (r []g
 		//		"type": "face",
 		//		"data": global.MSG{"id": o.ID, "type": "sticker"},
 		//	}
-		//case *message.GroupFileElement:
+		// case *message.GroupFileElement:
 		//	m = global.MSG{
 		//		"type": "file",
 		//		"data": global.MSG{"path": o.Path, "name": o.Name, "size": strconv.FormatInt(o.Size, 10), "busid": strconv.FormatInt(int64(o.Busid), 10)},
@@ -786,7 +786,7 @@ func (bot *CQBot) ConvertElement(spec *onebot.Spec, elem msg.Element, sourceType
 	//	i, _ := strconv.ParseInt(resID, 10, 64)
 	//	m := message.NewRichXml(template, i)
 	//	return m, nil
-	//case "json":
+	// case "json":
 	//	resID := elem.Get("resid")
 	//	data := elem.Get("data")
 	//	i, _ := strconv.ParseInt(resID, 10, 64)
